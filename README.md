@@ -98,3 +98,10 @@ node-csr-Bozk_ncqfXA05Jh4wCGLDCpDFjhpysBbDHh_jAqo74M   1m        kubelet-bootstr
 #通过 CSR 请求
 kubectl certificate approve node-csr-Bozk_ncqfXA05Jh4wCGLDCpDFjhpysBbDHh_jAqo74M
 ```
+# 测试集群是否正常
+```
+[root@k8s-node1 ~]# kubectl  run nginx --image=nginx:1.7.9
+[root@k8s-node1 ~]# kubectl  get pod
+NAME                     READY     STATUS    RESTARTS   AGE
+nginx-1480123054-kv5t4   1/1       Running   2          2h
+```
