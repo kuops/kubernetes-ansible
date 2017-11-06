@@ -6,9 +6,9 @@
 > 注意：
 > 1. 主机名用作 etcd 的名称，所以不能有重复的
  
-2. 高可用使用的是 nginx 反向代理， 每个 kube-apiserver-client 访问的 api-server 地址都为本机的 `127.0.0.1:6443`
+  2. 高可用使用的是 nginx 反向代理， 每个 kube-apiserver-client 访问的 api-server 地址都为本机的 `127.0.0.1:6443`
  
-3. inventory 中 nginx-proxy 中的地址为 node 节点的 ip  ， 如果 master 节点复用 node 节点，则 ansible 的  nginx-proxy 不能添加该 master 节点 ip
+  3. inventory 中 nginx-proxy 中的地址为 node 节点的 ip  ， 如果 master 节点复用 node 节点，则 ansible 的  nginx-proxy 不能添加该 master 节点 ip
 
 
 
