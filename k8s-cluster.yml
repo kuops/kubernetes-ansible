@@ -1,0 +1,36 @@
+- hosts: all
+  become: true
+  roles:
+  - common
+- hosts: ssl
+  become: true
+  roles:
+  - ssl
+- hosts: ssl
+  become: true
+  roles:
+  - kubeconfig
+- hosts: all
+  become: true
+  roles:
+  - distributeconf
+- hosts: etcd
+  become: true
+  roles:
+  - etcd
+- hosts: k8s-master
+  become: true
+  roles:
+  - k8s-master
+- hosts: nginx-proxy
+  become: true
+  roles:
+  - nginx-proxy
+- hosts: k8s-node
+  become: true
+  roles:
+  - k8s-node
+- hosts: flannel
+  become: true
+  roles:
+  - flannel

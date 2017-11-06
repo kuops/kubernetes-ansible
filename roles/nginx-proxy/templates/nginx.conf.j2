@@ -1,0 +1,25 @@
+error_log stderr notice;
+
+worker_processes auto;
+events {
+  multi_accept on;
+  use epoll;
+  worker_connections 1024;
+}
+
+stream {
+    upstream kube_apiserver {
+        least_conn;
+{% for node in groups['k8s-master'] %}
+        server {{ node }}:6443;
+{% if not loop.last %}{% endif %}
+{% endfor %}
+    }
+
+    server {
+        listen        0.0.0.0:6443;
+        proxy_pass    kube_apiserver;
+        proxy_timeout 10m;
+        proxy_connect_timeout 1s;
+    }
+}

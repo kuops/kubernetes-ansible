@@ -1,0 +1,28 @@
+[req]
+req_extensions = v3_req
+distinguished_name = req_distinguished_name
+[req_distinguished_name]
+[ v3_req ]
+basicConstraints = CA:FALSE
+keyUsage = nonRepudiation, digitalSignature, keyEncipherment
+subjectAltName = @alt_names
+[alt_names]
+DNS.1 = kubernetes
+DNS.2 = kubernetes.default
+DNS.3 = kubernetes.default.svc
+DNS.4 = kubernetes.default.svc.{{ cluster_name }}
+{% set node = groups['k8s-master'] | union(groups['k8s-node']) | union(groups['etcd']) %}
+{% for host in node %}
+{% set count1 = loop.index + 4 %}
+DNS.{{ count1 }} = k8s-node{{ loop.index }}
+{% if not loop.last -%}{%- endif -%}
+{% endfor %}
+
+IP.1 = {{ kubernetes_service_ip }}
+IP.2 = 127.0.0.1
+{% set node = groups['k8s-master'] | union(groups['k8s-node']) | union(groups['etcd']) %}
+{% for host in node %}
+{% set count2 = loop.index + 2 %}
+IP.{{ count2 }} = {{ host }}
+{% if not loop.last -%}{%- endif -%}
+{% endfor %}

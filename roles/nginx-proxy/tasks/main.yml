@@ -1,0 +1,14 @@
+- name: 准备 nginx 配置文件目录
+  file:
+    path: /etc/nginx
+    state: directory
+- name: 生成 nginx 配置文件
+  template:
+    src: templates/nginx.conf.j2
+    dest: /etc/nginx/nginx.conf
+- name: 准备 nginx 配置文件目录
+  copy:
+    src: files/nginx-proxy.service
+    dest: /usr/lib/systemd/system/nginx-proxy.service
+  notify:
+  - start nginx-proxy

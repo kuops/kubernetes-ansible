@@ -1,0 +1,21 @@
+- name: 生成 kubelet 配置文件
+  template:
+    src: templates/kubelet.j2
+    dest: /etc/kubernetes/kubelet
+- name: 创建 kubelet systemd 管理单元
+  copy:
+    src: files/kubelet.service
+    dest: /usr/lib/systemd/system/kubelet.service
+  notify:
+  - start kubelet
+- name: 生成 kube-proxy 配置文件
+  template:
+    src: templates/proxy.j2
+    dest: /etc/kubernetes/proxy
+- name: 创建 kube-proxy systemd 管理单元
+  copy:
+    src: files/kube-proxy.service
+    dest: /usr/lib/systemd/system/kube-proxy.service
+  notify:
+  - start kube-proxy
+

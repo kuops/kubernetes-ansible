@@ -1,0 +1,6 @@
+- name: start nginx-proxy
+  service:
+    name: nginx-proxy
+    state: restarted
+    daemon_reload: yes
+    enabled: yes

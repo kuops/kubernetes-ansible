@@ -1,0 +1,7 @@
+{
+    "Network": "{{ flannel_ip_range }}",
+    "SubnetLen": 24,
+    "Backend": {
+        "Type": "vxlan"
+     }
+}

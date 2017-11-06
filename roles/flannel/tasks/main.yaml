@@ -1,0 +1,48 @@
+- name: 设置新的变量
+  set_fact:
+    config_file: "/tmp/config.json"
+  run_once: true
+  delegate_to: "{{ groups['etcd'][0] }}"
+
+- name:  生成 flannel value
+  template: src=templates/flannel-config.json dest={{ config_file }}
+  run_once: true
+  delegate_to: "{{ groups['etcd'][0] }}"
+
+- name: etcd 记录网络地址
+  shell: "/usr/local/bin/etcdctl --ca-file={{ ca_cert }} --cert-file={{ etcd_cert }}  --key-file={{ etcd_key }} set {{ flannel_etcd_key }}/config < {{ config_file }}"
+  run_once: true
+  delegate_to: "{{ groups['etcd'][0] }}"
+- name:  安装 flannel
+  copy:
+    src: "{{ item.srcfile }}"
+    dest: "{{ item.destfile }}"
+    directory_mode: 755
+    mode: 0750
+  with_items:
+    - { srcfile: 'files/bin/flanneld', destfile: '/usr/local/bin/flanneld' }
+    - { srcfile: 'files/bin/mk-docker-opts.sh', destfile: '/usr/local/bin/mk-docker-opts.sh' }
+
+- name: 创建 /etc/sysconfig/flanneld
+  template: src="templates/flanneld.j2" dest=/etc/sysconfig/flanneld
+
+- name:  创建配置文件 flanneld.service
+  copy:
+    src: files/flanneld.service
+    dest: /usr/lib/systemd/system/flanneld.service
+  notify:
+  - start flanneld
+- name: 创建存放 docker 环境变量目录
+  file:
+    path: /usr/lib/systemd/system/docker.service.d/
+    state: directory
+- name:  docker 添加环境变量文件
+  copy:
+    src: files/flanneld.conf
+    dest: /usr/lib/systemd/system/docker.service.d/flanneld.conf
+- name:  docker service unit添加变量
+  copy:
+    src: files/docker.service
+    dest: /usr/lib/systemd/system/docker.service
+  notify:
+  - restart docker

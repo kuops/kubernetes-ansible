@@ -1,0 +1,21 @@
+- name: 创建相关目录
+  file:
+    path: "{{ item }}"
+    state: directory
+  with_items:
+    - "{{ etcd_data_dir }}"
+    - "{{ etcd_conf_dir }}"
+- name: 复制 etcd 二进制文件
+  copy:
+    src: files/bin/
+    dest: /usr/local/bin/
+    directory_mode: 755
+    mode: 0750
+- name: 生成 etcd 配置文件
+  template: src=etcd.conf.j2 dest="{{ etcd_conf_dir }}/etcd.conf"
+- name: 复制 etcd systemd unit 文件
+  copy:
+    src: files/etcd.service
+    dest: /usr/lib/systemd/system/etcd.service
+  notify:
+  - start etcd

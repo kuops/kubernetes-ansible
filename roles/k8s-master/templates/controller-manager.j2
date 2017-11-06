@@ -1,0 +1,7 @@
+###
+# The following values are used to configure the kubernetes controller-manager
+
+# defaults from config and apiserver should be adequate
+
+# Add your own!
+KUBE_CONTROLLER_MANAGER_ARGS="--address=127.0.0.1 --service-cluster-ip-range={{ cluster_ip_range }} --cluster-name=kubernetes --cluster-signing-cert-file={{ ca_cert }} --cluster-signing-key-file={{ ca_key }}  --service-account-private-key-file={{ apiserver_key }} --root-ca-file={{ ca_cert }} --leader-elect=true --kubeconfig={{ kube_cm_config }}"

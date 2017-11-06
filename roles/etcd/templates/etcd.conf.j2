@@ -1,0 +1,17 @@
+{% macro initial_cluster() -%}
+{% for host in groups['etcd'] -%}
+  {{ hostvars[host]['ansible_hostname'] }}=https://{{ hostvars[host].ansible_default_ipv4.address }}:2380
+  {%- if not loop.last -%},{%- endif -%}
+{%- endfor -%}
+{% endmacro -%}
+
+# [member]
+ETCD_NAME={{ ansible_hostname }}
+ETCD_DATA_DIR="{{ etcd_data_dir }}"
+ETCD_LISTEN_PEER_URLS="https://{{ ansible_default_ipv4.address }}:2380"
+ETCD_LISTEN_CLIENT_URLS="https://{{ ansible_default_ipv4.address }}:2379"
+# [cluster]
+ETCD_INITIAL_ADVERTISE_PEER_URLS="https://{{ ansible_default_ipv4.address }}:2380"
+ETCD_INITIAL_CLUSTER_TOKEN="etcd-cluster"
+ETCD_ADVERTISE_CLIENT_URLS="https://{{ ansible_default_ipv4.address }}:2379"
+ETCD_INITIAL_CLUSTER={{ initial_cluster() }}

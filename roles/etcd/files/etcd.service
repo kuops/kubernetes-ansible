@@ -1,0 +1,36 @@
+[Unit]
+Description=etcd key-value store
+Documentation=https://github.com/coreos/etcd
+After=network.target
+
+[Service]
+Type=notify
+WorkingDirectory=/var/lib/etcd
+EnvironmentFile=-/etc/etcd/etcd.conf
+ExecStart=/usr/local/bin/etcd \
+  --name ${ETCD_NAME} \
+  --initial-advertise-peer-urls ${ETCD_INITIAL_ADVERTISE_PEER_URLS} \
+  --listen-peer-urls ${ETCD_LISTEN_PEER_URLS} \
+  --listen-client-urls ${ETCD_LISTEN_CLIENT_URLS},http://127.0.0.1:2379 \
+  --advertise-client-urls ${ETCD_ADVERTISE_CLIENT_URLS} \
+  --initial-cluster-token ${ETCD_INITIAL_CLUSTER_TOKEN} \
+  --initial-cluster ${ETCD_INITIAL_CLUSTER} \
+  --initial-cluster-state new \
+  --client-cert-auth \
+  --cert-file=/etc/kubernetes/ssl/etcd.crt \
+  --key-file=/etc/kubernetes/ssl/etcd.key \
+  --trusted-ca-file=/etc/kubernetes/ssl/ca.crt \
+  --peer-client-cert-auth \
+  --peer-trusted-ca-file=/etc/kubernetes/ssl/ca.crt \
+  --peer-cert-file=/etc/kubernetes/ssl/etcd.crt \
+  --peer-key-file=/etc/kubernetes/ssl/etcd.key \
+  --data-dir=${ETCD_DATA_DIR} \
+  --heartbeat-interval 1000 \
+  --election-timeout 5000
+
+Restart=always
+RestartSec=10s
+LimitNOFILE=65535
+
+[Install]
+WantedBy=multi-user.target

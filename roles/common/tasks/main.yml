@@ -1,0 +1,37 @@
+- name: 分发 hosts
+  template:
+    src: hosts.j2
+    dest: /etc/hosts
+- name: 修改内核参数
+  copy:
+    src: files/docker.conf
+    dest: "{{ docker_sysctl }}"
+- name: 添加 docker-ce yum 源
+  copy:
+    src: files/docker-ce.repo
+    dest: "{{ docker_repo }}"
+- name: 安装 docker-ce conntrack-tools
+  when: ansible_os_family == "RedHat"
+  yum:
+    name: "{{ item }}"
+    state: present
+    update_cache: yes
+  with_items:
+    -  docker-ce
+    - conntrack-tools
+- name: 设置 Docker 镜像加速
+  copy:
+    src: files/docker.service
+    dest: "{{ docker_systemd }}"
+  notify:
+  - start docker-ce
+- name: 安装 kubernetes 二进制
+  copy:
+    src: files/bin/
+    dest: /usr/local/bin/
+    directory_mode: 755
+    mode: 0750
+- name: 配置 kubectl 命令补全
+  copy:
+    src: files/kubernetes.sh
+    dest: /etc/profile.d/kubernetes.sh

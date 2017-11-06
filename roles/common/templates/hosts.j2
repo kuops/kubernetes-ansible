@@ -1,0 +1,8 @@
+127.0.0.1   localhost localhost.localdomain localhost4 localhost4.localdomain4
+::1         localhost localhost.localdomain localhost6 localhost6.localdomain6
+
+{% set node = groups['k8s-master'] | union(groups['k8s-node']) | union(groups['nginx-proxy']) | union(groups['etcd']) %}
+{% for host in node %}
+{{ hostvars[host].ansible_default_ipv4.address }} {{ hostvars[host]['ansible_hostname'] }}
+{% if not loop.last -%}{%- endif -%}
+{% endfor %}
