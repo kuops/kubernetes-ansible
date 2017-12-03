@@ -101,6 +101,8 @@ NAME                                                   AGE       REQUESTOR      
 node-csr-Bozk_ncqfXA05Jh4wCGLDCpDFjhpysBbDHh_jAqo74M   1m        kubelet-bootstrap   Pending
 #通过 CSR 请求
 kubectl certificate approve node-csr-Bozk_ncqfXA05Jh4wCGLDCpDFjhpysBbDHh_jAqo74M
+#批量授权
+kubectl get csr|awk '$NF~/Pending/{print $1}'|xargs kubectl certificate approve
 ```
 # 测试集群是否正常
 ```
