@@ -9,6 +9,7 @@ Type=notify
 # the default is not to use systemd for cgroups because the delegate issues still
 # exists and systemd currently does not support the cgroup feature set required
 # for containers run by docker
+EnvironmentFile=-/run/flannel/docker
 ExecStart=/usr/bin/dockerd --registry-mirror=http://1b5c8ead.m.daocloud.io  $DOCKER_NETWORK_OPTIONS
 ExecReload=/bin/kill -s HUP $MAINPID
 # Having non-zero Limit*s causes performance problems due to accounting overhead
