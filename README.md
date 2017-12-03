@@ -10,7 +10,7 @@
  
   3. inventory 中 nginx-proxy 中的地址为 node 节点的 ip  ， 如果 master 节点复用 node 节点，则 ansible 的  nginx-proxy 不能添加该 master 节点 ip
 
-  4. 运行 ansible playbook 的机器必须为 ssl 所在节点
+  4. 运行 ansible playbook 的机器必须为 ssl 所在节点
 
 # 主机列表
 
