@@ -111,3 +111,25 @@ kubectl get csr|awk '$NF~/Pending/{print $1}'|xargs kubectl certificate approve
 NAME                     READY     STATUS    RESTARTS   AGE
 nginx-1480123054-kv5t4   1/1       Running   2          2h
 ```
+
+# master 节点认证
+如果其他 master 需要通过 kubectl 访问 kubernetes,手动配置改选项，默认 ssl 所在节点已经安装
+```
+export KUBE_APISERVER="https://127.0.0.1:6443"
+# 设置集群参数
+kubectl config set-cluster kubernetes \
+  --certificate-authority=/etc/kubernetes/ssl/ca.crt \
+  --embed-certs=true \
+  --server=${KUBE_APISERVER}
+# 设置客户端认证参数
+kubectl config set-credentials admin \
+  --client-certificate=/etc/kubernetes/ssl/admin.crt \
+  --embed-certs=true \
+  --client-key=/etc/kubernetes/ssl/admin.key
+# 设置上下文参数
+kubectl config set-context kubernetes \
+  --cluster=kubernetes \
+  --user=admin
+# 设置默认上下文
+kubectl config use-context kubernetes
+```
