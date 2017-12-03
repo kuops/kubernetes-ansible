@@ -1,7 +1,7 @@
 [Unit]
 Description=kubernetes nginx-proxy master
-Wants=docker.socket
-After=docker.service
+After=kublet.service kube-proxy.service
+Wants=kublet.service kube-proxy.service
 
 [Service]
 User=root
