@@ -5,7 +5,7 @@ Before=docker.service
 [Service]
 Type=notify
 EnvironmentFile=/etc/sysconfig/flanneld
-ExecStart=/usr/local/bin/flanneld -etcd-endpoints=${FLANNEL_ETCD} $FLANNEL_OPTIONS
+ExecStart=/usr/local/bin/flanneld -etcd-endpoints=${FLANNEL_ETCD} -etcd-prefix=${ETCD_PREFIX} $FLANNEL_OPTIONS 
 ExecStartPost=/usr/local/bin/mk-docker-opts.sh -k DOCKER_NETWORK_OPTIONS -d /run/flannel/docker
 [Install]
 RequiredBy=docker.service
