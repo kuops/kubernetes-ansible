@@ -2,7 +2,6 @@
 Description=Kubernetes API Service
 Documentation=https://github.com/kubernetes/kubernetes
 After=network.target etcd.service
-Requires=etcd.service
 
 [Service]
 EnvironmentFile=-/etc/kubernetes/config
