@@ -1,0 +1,25 @@
+---
+- name: 安装常用命令
+  yum:
+    name: "{{ item }}"
+    state: present
+  with_items:
+    - yum-plugin-fastestmirror
+    - epel-release
+    - vim
+    - net-tools
+    - lrzsz
+    - bash-completion
+    - rsync
+    - sysstat
+    - git
+    - chrony
+    - tree
+    - yum-utils
+    - lsof
+    - zip
+    - unzip
+    - telnet
+    - nc
+    - ipvsadm
+

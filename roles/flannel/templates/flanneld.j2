@@ -1,3 +1,0 @@
-FLANNEL_ETCD="{% for node in groups['etcd'] %}https://{{ node }}:2379{% if not loop.last %},{% endif %}{% endfor %}"
-FLANNEL_ETCD_KEY="{{ flannel_etcd_key }}"
-FLANNEL_OPTIONS="-etcd-cafile={{ ca_cert }} -etcd-certfile={{ etcd_cert }} -etcd-keyfile={{ etcd_key }}"

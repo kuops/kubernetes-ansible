@@ -1,0 +1,13 @@
+---
+- hosts: 10.0.7.102
+  vars:
+    test_vars: test
+  become: true
+  tasks:
+  - name: rsync_test
+    synchronize: 
+      src: /tmp/a.txt
+      dest: /tmp/c.txt
+      rsync_opts:
+      - "--rsh=/bin/ssh -o PasswordAuthentication=no -i /home/kuops/ansible/files/ssh-keys/id_rsa"
+    #delegate_to: 10.0.7.101

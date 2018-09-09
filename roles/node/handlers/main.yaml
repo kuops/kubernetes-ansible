@@ -1,0 +1,15 @@
+---
+- name: restart kubelet
+  systemd:
+    name: kubelet
+    state: restarted
+    daemon_reload: yes
+    enabled: yes
+
+
+- name: restart kube-proxy
+  systemd:
+    name: kube-proxy
+    state: restarted
+    daemon_reload: yes
+    enabled: yes

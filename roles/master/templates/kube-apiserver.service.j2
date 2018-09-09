@@ -1,0 +1,54 @@
+[Unit]
+Description=Kubernetes API Server
+Documentation=https://github.com/kubernetes/kubernetes
+After=network.target
+
+[Service]
+ExecStart=/usr/local/bin/kube-apiserver  \
+  --authorization-mode=Node,RBAC  \
+  --enable-admission-plugins=Initializers,DefaultStorageClass,DefaultTolerationSeconds,LimitRanger,NamespaceLifecycle,NodeRestriction,PersistentVolumeClaimResize,ResourceQuota,ServiceAccount  \
+  --advertise-address={{ ansible_host }}  \
+  --bind-address=0.0.0.0  \
+  --insecure-port=0  \
+  --secure-port=6443  \
+  --allow-privileged=true  \
+  --apiserver-count=3  \
+  --audit-log-maxage=30  \
+  --audit-log-maxbackup=3  \
+  --audit-log-maxsize=100  \
+  --audit-log-path=/var/log/audit.log  \
+  --enable-swagger-ui=true  \
+  --storage-backend=etcd3  \
+  --etcd-cafile={{ ca_cert }}  \
+  --etcd-certfile={{ etcd_client_cert }}  \
+  --etcd-keyfile={{ etcd_client_key }}  \
+  --etcd-servers=https://10.0.7.101:2379,https://10.0.7.102:2379,https://10.0.7.103:2379  \
+  --event-ttl=1h  \
+  --enable-bootstrap-token-auth  \
+  --client-ca-file={{ ca_cert }}  \
+  --kubelet-https  \
+  --kubelet-client-certificate={{ apiserver_kubelet_client_cert }}  \
+  --kubelet-client-key={{ apiserver_kubelet_client_key }}  \
+  --kubelet-preferred-address-types=InternalIP,ExternalIP,Hostname  \
+  --runtime-config=api/all  \
+  --service-cluster-ip-range=10.96.0.0/16  \
+  --service-node-port-range=30000-32767  \
+  --service-account-key-file={{ sa_pub }}  \
+  --tls-cert-file={{ kube_apiserver_cert }}  \
+  --tls-private-key-file={{ kube_apiserver_key }} \
+  --requestheader-client-ca-file=/etc/kubernetes/pki/front-proxy-ca.crt  \
+  --requestheader-username-headers=X-Remote-User  \
+  --requestheader-group-headers=X-Remote-Group  \
+  --requestheader-allowed-names=front-proxy-client  \
+  --requestheader-extra-headers-prefix=X-Remote-Extra-  \
+  --proxy-client-cert-file=/etc/kubernetes/pki/front-proxy-client.crt  \
+  --proxy-client-key-file=/etc/kubernetes/pki/front-proxy-client.key  \
+  --feature-gates=PodShareProcessNamespace=true  \
+  --v=2
+
+Restart=on-failure
+RestartSec=10s
+LimitNOFILE=65535
+
+[Install]
+WantedBy=multi-user.target

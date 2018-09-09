@@ -1,0 +1,36 @@
+---
+- name: 安装 docker-ce
+  yum:
+    name: "{{ item }}"
+    state: present
+  with_items:
+    - docker-ce
+    - conntrack-tools
+
+- name: 设置 docker 内核参数
+  copy:
+    src: kubernetes-sysctl.conf
+    dest: /etc/sysctl.d/kubernetes-sysctl.conf
+  register: kernel_file
+
+- name: 加载内核参数
+  shell: sysctl -p --system
+  when: kernel_file is succeeded
+
+- name: 创建目录 /etc/docker
+  file:
+    path: /etc/docker
+    state: directory
+
+- name: 设置 daemon.json
+  copy:
+    src: daemon.json
+    dest: /etc/docker/daemon.json
+  notify:
+    - start docker
+
+- name: 为 vagrant 用户添加 docker 附加组
+  user:
+    name:  vagrant
+    groups: docker
+    append: yes
