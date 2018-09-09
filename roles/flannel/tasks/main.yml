@@ -8,6 +8,7 @@
   copy:
     src: bin/
     dest: /opt/cni/bin/
+    mode: 0755
   
 - name: 检查是否安装 flannel
   shell: |
