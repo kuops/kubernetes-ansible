@@ -1,0 +1,36 @@
+---
+#- hosts: ssl
+#  roles:
+#    - role: ssl
+#
+#- hosts: all
+#  roles:
+#    - role: distribution_file
+#
+#- hosts: master
+#  roles:
+#    - role: kubeconfig
+#
+#- hosts: etcd
+#  roles:
+#    - role: etcd
+#
+#- hosts: master
+#  roles:
+#    - role: ha
+#
+#- hosts: master
+#  roles:
+#    - role: master
+#
+#- hosts: all
+#  roles:
+#    - role: bootstrap
+#
+#- hosts: all
+#  roles:
+#    - role: node
+
+- hosts: all
+  roles:
+    - role: flannel

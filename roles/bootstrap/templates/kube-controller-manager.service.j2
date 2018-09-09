@@ -1,0 +1,28 @@
+[Unit]
+Description=Kubernetes Controller Manager
+Documentation=https://github.com/kubernetes/kubernetes
+After=network.target
+
+[Service]
+ExecStart=/usr/local/bin/kube-controller-manager  \
+  --allocate-node-cidrs=true  \
+  --kubeconfig={{ kube_cm_config }}  \
+  --address=127.0.0.1  \
+  --leader-elect=true  \
+  --service-account-private-key-file={{ sa_private_key }}  \
+  --cluster-name=kubernetes  \
+  --cluster-cidr=10.244.0.0/16  \
+  --service-cluster-ip-range=10.96.0.0/16  \
+  --cluster-signing-cert-file={{ ca_cert }}  \
+  --cluster-signing-key-file={{ ca_key }}  \
+  --root-ca-file={{ ca_cert }}  \
+  --use-service-account-credentials=true  \
+  --controllers=*,bootstrapsigner,tokencleaner  \
+  --experimental-cluster-signing-duration=86700h  \
+  --feature-gates=RotateKubeletClientCertificate=true  \
+  --v=2
+Restart=always
+RestartSec=10s
+
+[Install]
+WantedBy=multi-user.target

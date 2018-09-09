@@ -1,0 +1,74 @@
+# vim:ft=ansible:
+---
+- name:  查询是否创建 kube-proxy sa
+  shell: |
+    /usr/local/bin/kubectl -n kube-system get serviceaccount kube-proxy
+  register:  proxy_sa_result
+  ignore_errors: true
+  delegate_to: "{{ groups['master'][0] }}"
+  run_once: true
+
+- name: 创建 kube-proxy service account
+  shell: |
+    /usr/local/bin/kubectl -n kube-system create serviceaccount kube-proxy
+    /usr/local/bin/kubectl create clusterrolebinding kubeadm:node-proxier \
+        --clusterrole system:node-proxier \
+        --serviceaccount kube-system:kube-proxy
+  when: proxy_sa_result is failed
+  delegate_to: "{{ groups['master'][0] }}"
+  run_once: true
+
+- stat:
+    path: "{{ kube_proxy_config }}"
+  register: proxy_config_result
+
+- name: 获取 kube-proxy 的 secret
+  shell: |
+    /usr/local/bin/kubectl -n kube-system get sa/kube-proxy \
+      --output=jsonpath='{.secrets[0].name}'
+  register: secret_value
+  delegate_to: "{{ groups['master'][0] }}"
+  run_once: true
+
+- set_fact: kube_proxy_secret_name="{{ secret_value.stdout }}"
+
+- name: 获取 kube-proxy JWT token
+  shell: |
+    /usr/local/bin/kubectl -n kube-system get secret/{{ kube_proxy_secret_name }} \
+    --output=jsonpath='{.data.token}' | base64 -d
+
+  register: get_jwt_token
+  delegate_to: "{{ groups['master'][0] }}"
+  run_once: true
+
+- set_fact: jwt_token="{{ get_jwt_token.stdout }}"
+
+- name: 生成 kube-proxy kubeconfig
+  when: not proxy_config_result.stat.exists
+  command: "{{ item }}"
+  delegate_to: "{{ groups['master'][0] }}"
+  run_once: true
+  with_items:
+    - "/usr/local/bin/kubectl config set-cluster {{ cluster_name }} --certificate-authority={{ ca_cert }} --embed-certs=true --server={{ kube_apiserver }} --kubeconfig={{ kube_proxy_config }}"
+    - "/usr/local/bin/kubectl config set-credentials {{ cluster_name }} --token={{ jwt_token }} --kubeconfig={{ kube_proxy_config }}"
+    - "/usr/local/bin/kubectl config set-context {{ cluster_name }} --cluster={{ cluster_name }} --user={{ cluster_name }} --namespace=default --kubeconfig={{ kube_proxy_config }}"
+    - "/usr/local/bin/kubectl config use-context {{ cluster_name }} --kubeconfig={{ kube_proxy_config }}"
+
+- name: 分发到其他节点
+  synchronize:
+    mode: push
+    src: "{{ item.src }}"
+    dest: "{{ item.dest }}"
+    rsync_opts:
+    - "--rsh=/bin/ssh -o StrictHostKeyChecking=no -o PasswordAuthentication=no -i /vagrant/files/ssh-keys/id_rsa"
+    #rsync_path: "su -c rsync"
+  with_items:
+    - { src: "{{ kube_proxy_config }}", dest: "{{ kube_proxy_config }}" }
+  delegate_to: "{{ groups['master'][0] }}"
+
+- name: 发送 kube-proxy system 文件
+  template:
+    src: kube-proxy.service.j2
+    dest: "/usr/lib/systemd/system/kube-proxy.service"
+  notify:
+    - restart kube-proxy

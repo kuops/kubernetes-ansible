@@ -1,0 +1,68 @@
+---
+- name: 创建 /etc/kubernetes/pki 目录
+  file: path={{ cert_dir }} state=directory
+
+- name: 创建 openssl 配置文件
+  template: src="templates/openssl.cnf.j2" dest={{ openssl_cnf }}
+
+- stat: path={{ ca_cert }}
+  register: ca_ssl
+
+- name: 创建 kubernetes ssl 证书
+  when: not ca_ssl.stat.exists
+  register: create_cert
+  command: "{{ item }}"
+  with_items:
+    #ca 
+    - openssl genrsa -out {{ ca_key }} 2048
+    - openssl req -x509 -new -nodes -key {{ ca_key }} -config {{ openssl_cnf }} -subj "/CN=kubernetes" -extensions v3_ca -out {{ ca_cert }} -days 10000
+    #etcd
+    - openssl genrsa -out {{ etcd_server_key }} 2048
+    - openssl req -new -key {{ etcd_server_key }} -subj "/CN=etcd-server" -out {{ cert_dir }}/etcd-server.csr
+    - openssl x509 -in {{ cert_dir }}/etcd-server.csr -req -CA {{ ca_cert }} -CAkey {{ ca_key }} -CAcreateserial -extensions v3_req_etcd -extfile {{ openssl_cnf }} -out {{ etcd_server_cert }} -days 10000
+    - openssl genrsa -out {{ etcd_peer_key }} 2048
+    - openssl req -new -key {{ etcd_peer_key }} -subj "/CN=etcd-peer" -out {{ cert_dir }}/etcd-peer.csr
+    - openssl x509 -in {{ cert_dir }}/etcd-peer.csr -req -CA {{ ca_cert }} -CAkey {{ ca_key }} -CAcreateserial -extensions v3_req_etcd -extfile {{ openssl_cnf }} -out {{ etcd_peer_cert }} -days 10000
+    - openssl genrsa -out {{ etcd_client_key }} 2048
+    - openssl req -new -key {{ etcd_client_key }} -subj "/CN=etcd-client" -out {{ cert_dir }}/etcd-client.csr
+    - openssl x509 -in {{ cert_dir }}/etcd-client.csr -req -CA {{ ca_cert }} -CAkey {{ ca_key }} -CAcreateserial -extensions v3_req_etcd -extfile {{ openssl_cnf }} -out {{ etcd_client_cert }} -days 10000
+    #kubernets
+    - openssl genrsa -out {{ kube_apiserver_key }} 2048
+    - openssl req -new -key {{ kube_apiserver_key }} -subj "/CN=kube-apiserver" -config {{ openssl_cnf }} -out {{ cert_dir }}/kube-apiserver.csr
+    - openssl x509 -req -in {{ cert_dir }}/kube-apiserver.csr -CA {{ ca_cert }} -CAkey {{ ca_key }} -CAcreateserial -days 10000 -extensions v3_req_apiserver -extfile {{ openssl_cnf }} -out {{ kube_apiserver_cert }}
+    - openssl genrsa -out  {{ apiserver_kubelet_client_key }} 2048
+    - openssl req -new -key {{ apiserver_kubelet_client_key }} -subj "/CN=apiserver-kubelet-client/O=system:masters" -out {{ cert_dir }}/apiserver-kubelet-client.csr
+    - openssl x509 -req -in {{ cert_dir }}/apiserver-kubelet-client.csr -CA {{ ca_cert }} -CAkey {{ ca_key }} -CAcreateserial -days 10000 -extensions v3_req_client -extfile {{ openssl_cnf }} -out {{ apiserver_kubelet_client_cert }}
+    - openssl genrsa -out  {{ sa_key }} 2048
+    - openssl ecparam -name secp521r1 -genkey -noout -out {{ sa_key }}
+    - openssl ec -in {{ sa_key }} -outform PEM -pubout -out {{ sa_pub }}
+    - openssl req -new -sha256 -key {{ sa_key }} -subj "/CN=system:kube-controller-manager" -out {{ cert_dir }}/sa.csr
+    - openssl x509 -req -in {{ cert_dir }}/sa.csr -CA {{ ca_cert }} -CAkey {{ ca_key }} -CAcreateserial -days 10000 -extensions v3_req_client -extfile {{ openssl_cnf }} -out {{ sa_cert }}
+    - openssl genrsa -out {{ kube_scheduler_key }} 2048
+    - openssl req -new -key {{ kube_scheduler_key }} -subj "/CN=system:kube-scheduler" -out {{ cert_dir }}/kube-scheduler.csr
+    - openssl x509 -req -in {{ cert_dir }}/kube-scheduler.csr -CA {{ ca_cert }} -CAkey {{ ca_key }} -CAcreateserial -days 10000 -extensions v3_req_client -extfile {{ openssl_cnf }} -out {{ kube_scheduler_cert }}
+    - openssl genrsa -out  {{ kube_proxy_key }} 2048
+    - openssl req -new -key {{ kube_proxy_key }} -subj "/CN=kube-proxy/O=system:node-proxier" -out {{ cert_dir }}/kube-proxy.csr
+    - openssl x509 -req -in {{ cert_dir }}/kube-proxy.csr -CA {{ ca_cert }} -CAkey {{ ca_key }} -CAcreateserial -days 10000 -extensions v3_req_client -extfile {{ openssl_cnf }} -out {{ kube_proxy_cert }}
+    - openssl genrsa -out  {{ front_proxy_ca_key }} 2048
+    - openssl req -x509 -new -nodes -key  {{ front_proxy_ca_key }} -config {{ openssl_cnf }} -subj "/CN=front-proxy-ca" -extensions v3_ca -out {{ front_proxy_ca_cert }} -days 10000
+    - openssl genrsa -out  {{ front_proxy_client_key }} 2048
+    - openssl req -new -key {{ front_proxy_client_key }} -subj "/CN=front-proxy-client" -out {{ cert_dir }}/front-proxy-client.csr
+    - openssl x509 -req -in {{ cert_dir }}/front-proxy-client.csr -CA {{ front_proxy_ca_cert }} -CAkey {{ front_proxy_ca_key }} -CAcreateserial -days 10000 -extensions v3_req_client -extfile {{ openssl_cnf }} -out {{ front_proxy_client_cert }}
+    - openssl genrsa -out  {{ admin_key }} 2048
+    - openssl req -new -key {{ admin_key }} -subj "/CN=admin/O=system:masters" -out {{ cert_dir }}/admin.csr
+    - openssl x509 -req -in {{ cert_dir }}/admin.csr -CA {{ ca_cert }} -CAkey {{ ca_key }} -CAcreateserial -days 10000 -extensions v3_req_client -extfile {{ openssl_cnf }} -out {{ admin_cert }}
+
+- name: 查找 csr 文件
+  when: create_cert is succeeded
+  find:
+    paths: "{{ cert_dir }}"
+    patterns: "*.csr"
+  register: csr_glob
+
+- name: 清理 csr 文件
+  file:
+    path: "{{ item.path }}"
+    state: absent
+  with_items:
+    - "{{ csr_glob.files }}"

@@ -1,0 +1,31 @@
+---
+- name: 创建 /opt/cni/bin 目录
+  file:
+    path: /opt/cni/bin
+    state: directory
+
+- name: 安装 cni 组件
+  copy:
+    src: bin/
+    dest: /opt/cni/bin/
+  
+- name: 检查是否安装 flannel
+  shell: |
+    /usr/local/bin/kubectl get ds -n kube-system flannel
+  ignore_errors: true
+  delegate_to: "{{ groups['master'][0] }}"
+  run_once: true
+  register: flannel_install_relult
+
+- template:
+    src: kube-flannel.yml.j2
+    dest: /root/kube-flannel.yml
+  delegate_to: "{{ groups['master'][0] }}"
+  run_once: true
+
+- name: 创建 flannel daemonset
+  shell: |
+    /usr/local/bin/kubectl apply -f /root/kube-flannel.yml
+  when: flannel_install_relult is failed
+  delegate_to: "{{ groups['master'][0] }}"
+  run_once: true

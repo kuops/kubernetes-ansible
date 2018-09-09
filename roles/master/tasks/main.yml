@@ -1,0 +1,13 @@
+---
+- name:  生成 kubernetes systemd unit 配置文件
+  template:
+    src: "{{ item.src }}"
+    dest: "/usr/lib/systemd/system/{{ item.dest }}"
+  with_items:
+    - { src: 'kube-apiserver.service.j2', dest: 'kube-apiserver.service' }
+    - { src: 'kube-controller-manager.service.j2', dest: 'kube-controller-manager.service' }
+    - { src: 'kube-scheduler.service.j2', dest: 'kube-scheduler.service' }
+  notify:
+  - start kube-apiserver
+  - start kube-controller-manager
+  - start kube-scheduler

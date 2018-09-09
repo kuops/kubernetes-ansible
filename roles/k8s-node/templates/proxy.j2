@@ -1,7 +1,0 @@
-###
-# kubernetes proxy config
-
-# default config should be adequate
-
-# Add your own!
-KUBE_PROXY_ARGS="--bind-address={{ ansible_default_ipv4.address }} --hostname-override={{ ansible_hostname }} --kubeconfig=/etc/kubernetes/kube-proxy.kubeconfig --cluster-cidr={{ cluster_ip_range }}"

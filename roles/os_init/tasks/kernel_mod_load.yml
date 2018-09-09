@@ -1,0 +1,8 @@
+---
+- name: 创建 kernel_mod_ipvs.conf
+  copy:
+    src: kernel_mod_ipvs.conf
+    dest: /etc/modules-load.d/kernel_mod_ipvs.conf
+  notify:
+    - module load
+

@@ -1,0 +1,45 @@
+[ req ]
+distinguished_name = req_distinguished_name
+[req_distinguished_name]
+[ v3_ca ]
+basicConstraints = critical, CA:TRUE
+keyUsage = critical, digitalSignature, keyEncipherment, keyCertSign
+[ v3_req_server ]
+basicConstraints = CA:FALSE
+keyUsage = critical, digitalSignature, keyEncipherment
+extendedKeyUsage = serverAuth
+[ v3_req_client ]
+basicConstraints = CA:FALSE
+keyUsage = critical, digitalSignature, keyEncipherment
+extendedKeyUsage = clientAuth
+[ v3_req_apiserver ]
+basicConstraints = CA:FALSE
+keyUsage = critical, digitalSignature, keyEncipherment
+extendedKeyUsage = serverAuth
+subjectAltName = @alt_names_cluster
+[ v3_req_etcd ]
+basicConstraints = CA:FALSE
+keyUsage = critical, digitalSignature, keyEncipherment
+extendedKeyUsage = serverAuth, clientAuth
+subjectAltName = @alt_names_etcd
+[ alt_names_cluster ]
+DNS.1 = kubernetes
+DNS.2 = kubernetes.default
+DNS.3 = kubernetes.default.svc
+DNS.4 = kubernetes.default.svc.cluster.local
+DNS.5 = k8s-master1
+DNS.6 = k8s-master2
+DNS.7 = k8s-master3
+DNS.8 = localhost
+IP.1 = 10.96.0.1
+IP.2 = 127.0.0.1
+IP.3 = 10.0.7.100
+IP.4 = 10.0.7.101
+IP.5 = 10.0.7.102
+IP.6 = 10.0.7.103
+[ alt_names_etcd ]
+DNS.1 = localhost
+IP.1 = 10.0.7.101
+IP.2 = 10.0.7.102
+IP.3 = 10.0.7.103
+IP.4 = 127.0.0.1

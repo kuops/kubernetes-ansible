@@ -1,0 +1,18 @@
+---
+- name: 升级内核
+  yum:
+    name: kernel-lt
+    enablerepo: "elrepo-kernel"
+- name: 修改grub
+  replace:
+    path: /etc/default/grub
+    regexp: 'GRUB_DEFAULT=.*'
+    replace: 'GRUB_DEFAULT=0'
+    backup: yes
+- name: 生成新的grub.cfg
+  shell: grub2-mkconfig -o /boot/grub2/grub.cfg
+- name: 重启集群
+  command: /sbin/shutdown -r +1
+  async: 0
+  poll: 0
+  ignore_errors: true

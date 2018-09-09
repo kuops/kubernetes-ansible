@@ -1,0 +1,11 @@
+---
+- name: 关闭 swap
+  command: swapoff --all
+  ignore_errors: yes
+
+- name: /etc/fstab 关闭 swap
+  lineinfile:
+    dest: /etc/fstab
+    regexp: '^/[\S]+\s+swap\s+swap'
+    state: absent
+

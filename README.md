@@ -1,135 +1,76 @@
-# kubernetes-ansible
+# HA-Kubernetes-Ansible 
 
- 使用 ansible 搭建二进制 kubernetes 集群
- 
- 
-注意：
-  1. 主机名用作 etcd 的名称，所以不能有重复的
- 
-  2. 高可用使用的是 nginx 反向代理， 每个 kube-apiserver-client 访问的 api-server 地址都为本机的 `127.0.0.1:6443`
- 
-  3. inventory 中 nginx-proxy 中的地址为 node 节点的 ip  ， 如果 master 节点复用 node 节点，则 ansible 的  nginx-proxy 不能添加该 master 节点 ip
+拉取代码
 
-  4. 运行 ansible playbook 的机器必须为 ssl 所在节点
-
-# 主机列表
-
-|IP|OS|hostname|
-|---|---|---|
-|10.0.7.1|CentOS 7.3|k8s-node1|
-|10.0.7.2|CentOS 7.3|k8s-node2|
-|10.0.7.3|CentOS 7.3|k8s-node3|
-|10.0.7.4|CentOS 7.3|k8s-node4|
-
-
-# 使用前提
-- 安装 epel yum 源
-- 关闭 selinux
-- 设置 时间同步
-
-# git clone
 ```
-git clone https://github.com/opspy/kubernetes-ansible.git
+git clone xxx  kubernetes-ansible
 cd kubernetes-ansible
+mkdir -p files/ssh-keys
+```
+生成 `ssh-keys` 并启动集群
+
+```
+ssh-keygen -t rsa -b 4096 -C "your_email@example.com" -N '' -f files/ssh-keys/id_rsa
+vagrant up
+ansible all -m ping
 ```
 
-# 分发秘钥
+保存 bootstrap 令牌
+
 ```
-ssh-keygen -t rsa  -f '/root/.ssh/id_rsa' -N ''
-for i in `seq 1 4`;do
-  ssh-copy-id root@10.0.7.${i}
-done
+TOKEN_PUB=$(openssl rand -hex 3)
+TOKEN_SECRET=$(openssl rand -hex 8)
+BOOTSTRAP_TOKEN="${TOKEN_PUB}.${TOKEN_SECRET}"
+sed -i "s@bootstrap_token: .*@bootstrap_token: ${BOOTSTRAP_TOKEN}@" group_vars/all.yml
+sed -i "s@bootstrap_token_pub: .*@bootstrap_token_pub: ${TOKEN_PUB}@" group_vars/all.yml
+sed -i "s@bootstrap_token_secret: .*@bootstrap_token_secret: ${TOKEN_SECRET}@" group_vars/all.yml
 ```
 
-# 准备 kubernetes 的二进制文件
+下载 kubernetes-二进制文件
+
 ```
-mkdir -p roles/common/files/bin
-TAG=v1.7.9
-URL=https://storage.googleapis.com/kubernetes-release/release/$TAG/bin/linux/amd64
-curl -# -L -o roles/common/files/bin/kube-apiserver $URL/kube-apiserver
-curl -# -L -o roles/common/files/bin/kube-controller-manager $URL/kube-controller-manager
-curl -# -L -o roles/common/files/bin/kube-scheduler $URL/kube-scheduler
-curl -# -L -o roles/common/files/bin/kube-proxy $URL/kube-proxy
-curl -# -L -o roles/common/files/bin/kubelet $URL/kubelet
-curl -# -L -o roles/common/files/bin/kubectl $URL/kubectl
+mkdir -p roles/distribution_file/files/
+KUBE_VERSION="v1.11.0"
+curl  https://storage.googleapis.com/kubernetes-release/release/${KUBE_VERSION}/kubernetes-server-linux-amd64.tar.gz > kubernetes-server-linux-amd64.tar.gz
+tar xf kubernetes-server-linux-amd64.tar.gz  --strip-components=3  -C roles/distribution_file/files/ kubernetes/server/bin/{kubelet,kubectl,kubeadm,kube-apiserver,kube-controller-manager,kube-scheduler,kube-proxy}
+rm -f kubernetes-server-linux-amd64.tar.gz
 ```
 
-# 准备 etcd 的二进制文件
+下载 etcd 二进制文件
+
 ```
-mkdir -p roles/etcd/files/bin
-ETCD_VER=v3.2.5
-wget -O /tmp/etcd-${ETCD_VER}-linux-amd64.tar.gz https://storage.googleapis.com/etcd/${ETCD_VER}/etcd-${ETCD_VER}-linux-amd64.tar.gz
-tar xf  /tmp/etcd-${ETCD_VER}-linux-amd64.tar.gz --strip-components 1 -C roles/etcd/files/bin
+mkdir -p roles/etcd/files/
+ETCD_VER=v3.2.18
+curl -L -4 https://storage.googleapis.com/etcd/${ETCD_VER}/etcd-${ETCD_VER}-linux-amd64.tar.gz > etcd-${ETCD_VER}-linux-amd64.tar.gz
+tar xf etcd-${ETCD_VER}-linux-amd64.tar.gz  --strip-components=1 -C roles/etcd/files/ etcd-${ETCD_VER}-linux-amd64/{etcd,etcdctl}
+rm -f etcd-${ETCD_VER}-linux-amd64.tar.gz
 ```
 
-# 准备 flannel 的二进制文件
+下载 CNI 插件
+
 ```
 mkdir -p roles/flannel/files/bin
-flannel_VER=v0.8.0
-wget -O /tmp/flannel.tar.gz https://github.com/coreos/flannel/releases/download/${flannel_VER}/flannel-${flannel_VER}-linux-amd64.tar.gz
-tar xf /tmp/flannel.tar.gz -C /tmp
-cp /tmp/{flanneld,mk-docker-opts.sh} roles/flannel/files/bin/
+CNI_VER="v0.6.0"
+curl -sSLO --retry 5 https://storage.googleapis.com/kubernetes-release/network-plugins/cni-plugins-amd64-${CNI_VER}.tgz
+tar -xf cni-plugins-amd64-${CNI_VER}.tgz -C roles/flannel/files/bin
+rm -f cni-plugins-amd64-${CNI_VER}.tgz
 ```
 
-# 生成 token 替换 ansible 变量
-
-使用 bootstrap 时需要用到
+初始化系统，升级内核
 ```
-TOKEN=$(head -c 16 /dev/urandom | od -An -t x | tr -d ' ')
-sed -ri "s@(bootstrap_token:) .*@\1 $TOKEN@g" group_vars/all.yml
+ansible-playbook os-init.yml
 ```
 
-# 执行 ansible
+等待系统启动完成后
+
 ```
-ansible-playbook k8s-cluster.yml
+ansible-playbook kubernetes-cluster.yml
 ```
 
-# 启动完成之后动态生成 kubelet 证书
+登陆 node1 检查
 
-创建 clustererolebinding ，在 ansible 的 ssl 主机执行
 ```
-kubectl create clusterrolebinding kubelet-bootstrap \
-  --clusterrole=system:node-bootstrapper \
-  --user=kubelet-bootstrap
+kubectl get node
 ```
 
-通过 kublet 的 TLS 证书请求 ， 需要等待 node 节点 的 nginx 和 kubelet 启动完毕，才会出现该请求
-```
-#查看未授权的 CSR 请求
-~]# kubectl get csr
-NAME                                                   AGE       REQUESTOR           CONDITION
-node-csr-Bozk_ncqfXA05Jh4wCGLDCpDFjhpysBbDHh_jAqo74M   1m        kubelet-bootstrap   Pending
-#通过 CSR 请求
-kubectl certificate approve node-csr-Bozk_ncqfXA05Jh4wCGLDCpDFjhpysBbDHh_jAqo74M
-#批量授权
-kubectl get csr|awk '$NF~/Pending/{print $1}'|xargs kubectl certificate approve
-```
-# 测试集群是否正常
-```
-[root@k8s-node1 ~]# kubectl  run nginx --image=nginx:1.7.9
-[root@k8s-node1 ~]# kubectl  get pod
-NAME                     READY     STATUS    RESTARTS   AGE
-nginx-1480123054-kv5t4   1/1       Running   2          2h
-```
-
-# master 节点认证
-如果其他 master 需要通过 kubectl 访问 kubernetes,手动配置改选项，默认 ssl 所在节点已经安装
-```
-export KUBE_APISERVER="https://127.0.0.1:6443"
-# 设置集群参数
-kubectl config set-cluster kubernetes \
-  --certificate-authority=/etc/kubernetes/ssl/ca.crt \
-  --embed-certs=true \
-  --server=${KUBE_APISERVER}
-# 设置客户端认证参数
-kubectl config set-credentials admin \
-  --client-certificate=/etc/kubernetes/ssl/admin.crt \
-  --embed-certs=true \
-  --client-key=/etc/kubernetes/ssl/admin.key
-# 设置上下文参数
-kubectl config set-context kubernetes \
-  --cluster=kubernetes \
-  --user=admin
-# 设置默认上下文
-kubectl config use-context kubernetes
-```
+只安装了kubernetes 基础组件和 flannel 网络插件，DNS 等其他插件自行使用 yaml 文件进行安装
