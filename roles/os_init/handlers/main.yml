@@ -1,7 +1,0 @@
----
-- name: start docker
-  service: name=docker state=restarted enabled=yes
-
-- name: module load
-  service: name=systemd-modules-load state=started
-

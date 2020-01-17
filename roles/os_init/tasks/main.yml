@@ -1,7 +1,0 @@
----
-- include: add_repo.yml
-- include: yum.yml
-- include: docker.yml
-- include: swap.yml
-- include: kernel_mod_load.yml
-- include: update_kernel.yml
