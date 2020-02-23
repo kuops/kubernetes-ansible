@@ -1,0 +1,14 @@
+---
+- name: Install kernel-ml
+  yum:
+    name: kernel-ml
+    state: present
+    enablerepo: elrepo-kernel
+
+- name: Setup grub2 use index 0
+  shell: |
+    grub2-set-default 0
+    grub2-mkconfig -o /boot/grub2/grub.cfg
+  when: ansible_kernel is version('4.0', '<')
+  notify:
+  - reboot system

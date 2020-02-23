@@ -1,0 +1,2 @@
+---
+- include: lb_envoy.yml

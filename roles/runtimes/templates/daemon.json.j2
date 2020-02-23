@@ -1,0 +1,17 @@
+{
+  "exec-opts": ["native.cgroupdriver={{ docker_cgroup_driver }}"],
+  "data-root": "{{  runtimes_docker_data_root }}",
+  "registry-mirrors": {{ runtimes_docker_registry_mirrors| replace("'",'"') }},
+  "log-driver": "{{ runtimes_docker_log_driver }}",
+  "log-opts": {
+  {% for key, value in runtimes_docker_log_opts.items() %}
+    "{{ key }}": "{{ value }}"
+  {%- if not loop.last %},
+  {% else %}
+
+  {% endif -%}
+  {% endfor %}
+  },
+  "storage-driver": "{{ runtimes_docker_storage_driver }}",
+  "storage-opts": {{ runtimes_docker_storage_opts|replace("'",'"') }}
+}

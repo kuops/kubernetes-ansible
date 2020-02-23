@@ -1,0 +1,41 @@
+---
+- name: Create kubernetes addons dir
+  file:
+    path: "{{ kubernetes_addons_dir }}"
+    state: directory
+
+- name: Apply kube-proxy addons
+  template:
+    src: kube-proxy.yaml.j2
+    dest: "{{ kubernetes_addons_dir }}/kube-proxy.yaml"
+  delegate_to: "{{ groups['kube_master'][0] }}"
+  register: kube_proxy_addons
+  run_once: yes
+
+- name: Apply kube-proxy ds and rbac
+  shell: |
+    kubectl --kubeconfig={{ kubernetes_kubeconfig_admin_conf }} \
+    apply -f {{ kubernetes_addons_dir }}//kube-proxy.yaml
+  environment:
+    PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
+  delegate_to: "{{ groups['kube_master'][0] }}"
+  run_once: yes
+  when: kube_proxy_addons.changed
+
+- name: Apply coredns addons
+  template:
+    src: coredns.yaml.j2
+    dest: "{{ kubernetes_addons_dir }}/coredns.yaml"
+  delegate_to: "{{ groups['kube_master'][0] }}"
+  register: coredns_addons
+  run_once: yes
+
+- name: Apply coredns deployment and rbac
+  shell: |
+    kubectl --kubeconfig={{ kubernetes_kubeconfig_admin_conf }} \
+    apply -f {{ kubernetes_addons_dir }}//coredns.yaml
+  environment:
+    PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
+  delegate_to: "{{ groups['kube_master'][0] }}"
+  run_once: yes
+  when: coredns_addons.changed

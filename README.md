@@ -1,76 +1,72 @@
-# HA-Kubernetes-Ansible 
+# Kubernetes-Ansible
 
-拉取代码
+This Repository is Using Ansible Deploy a Production high availability Kubernetes Cluster. Roles step Fllow the offical tools Kubeadm.
+
+## High availability 
+
+each node running a envoy loadbalancer on 127.0.0.1:8443 proxy the kube-apiserver serivce.
+
+## Dependencies
+
+- **Linux Distribution**: CentOS/7
+- **Ansible**: 2.9.4
+- **Vagrant**: 2.2.7
+- **VirtualBox**: 6.1.4
+- **Docker**: 19.03
+- **Kubernetes**: 1.17.3
+
+## Quick Start
+
+### Vagrant
+
+If you want using vagrant up local cluster, do this:
 
 ```
-git clone xxx  kubernetes-ansible
+git clone https://github.com/kuops/kubernetes-ansible.git
 cd kubernetes-ansible
-mkdir -p files/ssh-keys
-```
-生成 `ssh-keys` 并启动集群
-
-```
-ssh-keygen -t rsa -b 4096 -C "your_email@example.com" -N '' -f files/ssh-keys/id_rsa
 vagrant up
-ansible all -m ping
 ```
 
-保存 bootstrap 令牌
+Custom variables change defaults values of cluster in Vagrant.
 
-```
-TOKEN_PUB=$(openssl rand -hex 3)
-TOKEN_SECRET=$(openssl rand -hex 8)
-BOOTSTRAP_TOKEN="${TOKEN_PUB}.${TOKEN_SECRET}"
-sed -i "s@bootstrap_token: .*@bootstrap_token: ${BOOTSTRAP_TOKEN}@" group_vars/all.yml
-sed -i "s@bootstrap_token_pub: .*@bootstrap_token_pub: ${TOKEN_PUB}@" group_vars/all.yml
-sed -i "s@bootstrap_token_secret: .*@bootstrap_token_secret: ${TOKEN_SECRET}@" group_vars/all.yml
-```
+> this variables export before in `vagrant up`.
 
-下载 kubernetes-二进制文件
+Variables:
 
-```
-mkdir -p roles/distribution_file/files/
-KUBE_VERSION="v1.11.0"
-curl  https://storage.googleapis.com/kubernetes-release/release/${KUBE_VERSION}/kubernetes-server-linux-amd64.tar.gz > kubernetes-server-linux-amd64.tar.gz
-tar xf kubernetes-server-linux-amd64.tar.gz  --strip-components=3  -C roles/distribution_file/files/ kubernetes/server/bin/{kubelet,kubectl,kubeadm,kube-apiserver,kube-controller-manager,kube-scheduler,kube-proxy}
-rm -f kubernetes-server-linux-amd64.tar.gz
+```bash
+# master node nummber, should be deployed with odd numbers
+export KUBE_MASTER_NUM=3
+# worker node number 
+export KUBE_NODE_NUM=1
+# master node machine memory size
+export KUBE_MASTER_MEM=4096
+# worker node machine memory size
+export KUBE_NODE_MEM=16384
 ```
 
-下载 etcd 二进制文件
+If running has some error, setting debug variables:
 
-```
-mkdir -p roles/etcd/files/
-ETCD_VER=v3.2.18
-curl -L -4 https://storage.googleapis.com/etcd/${ETCD_VER}/etcd-${ETCD_VER}-linux-amd64.tar.gz > etcd-${ETCD_VER}-linux-amd64.tar.gz
-tar xf etcd-${ETCD_VER}-linux-amd64.tar.gz  --strip-components=1 -C roles/etcd/files/ etcd-${ETCD_VER}-linux-amd64/{etcd,etcdctl}
-rm -f etcd-${ETCD_VER}-linux-amd64.tar.gz
-```
+> then you can try `vagrant provision` continue running ansible.
 
-下载 CNI 插件
-
-```
-mkdir -p roles/flannel/files/bin
-CNI_VER="v0.6.0"
-curl -sSLO --retry 5 https://storage.googleapis.com/kubernetes-release/network-plugins/cni-plugins-amd64-${CNI_VER}.tgz
-tar -xf cni-plugins-amd64-${CNI_VER}.tgz -C roles/flannel/files/bin
-rm -f cni-plugins-amd64-${CNI_VER}.tgz
+```bash
+# ansbile verbose level 0-4
+export ANSIBLE_DEBUG=3
 ```
 
-初始化系统，升级内核
-```
-ansible-playbook os-init.yml
+### Ansible
+
+generator ca cert and bootstrap token, you can run:
+
+```bash
+# generator cert at base directory in .cert
+make cert
 ```
 
-等待系统启动完成后
+add your inventory on inventories directory, like `example` inventory:
 
 ```
-ansible-playbook kubernetes-cluster.yml
+inventories/example
+├── group_vars
+│   └── all.yml
+└── hosts
 ```
-
-登陆 node1 检查
-
-```
-kubectl get node
-```
-
-只安装了kubernetes 基础组件和 flannel 网络插件，DNS 等其他插件自行使用 yaml 文件进行安装

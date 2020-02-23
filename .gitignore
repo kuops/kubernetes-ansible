@@ -1,5 +1,6 @@
-files/ssh-keys/
-roles/etcd/files/
-roles/distribution_file/files/
-roles/flannel/files/bin/
+.cert/
+.bin/
+.vim/
 .vagrant/
+*.retry
+*.vmdk

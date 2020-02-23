@@ -1,0 +1,22 @@
+---
+- name: Disable NetworkManager change resolv.conf
+  ini_file:
+    path: /etc/NetworkManager/NetworkManager.conf
+    state: present
+    no_extra_spaces: yes
+    section: main
+    option: dns
+    value: none
+    backup: yes
+  notify:
+    - reload NetworkManager
+
+- name: Change resolv.conf
+  template:
+    src: resolv.conf.j2
+    dest: /etc/resolv.conf
+    backup: yes
+
+- name: Set timezone to Asia/Shanghai
+  timezone:
+    name: Asia/Shanghai

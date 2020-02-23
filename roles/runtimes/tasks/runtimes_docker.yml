@@ -1,0 +1,34 @@
+---
+# vagrant reboot loss some configuration
+- name: Change resolv.conf
+  template:
+    src: resolv.conf.j2
+    dest: /etc/resolv.conf
+    backup: yes
+
+- name: Install Docker
+  yum:
+    name: "{{ rumtimes_docker_apps }}"
+    state: present
+    enablerepo: docker-ce-stable
+
+- name: Create Directory {{ runtimes_docker_data_root }}
+  file:
+    path: "{{ runtimes_docker_data_root }}"
+    state: directory
+
+- name: Create Directory {{ runtimes_docker_config_dir }}
+  file:
+    path: "{{ runtimes_docker_config_dir }}"
+    state: directory
+
+- name: Setting Docker daemon.json
+  template:
+    src: daemon.json.j2
+    dest: "{{ runtimes_docker_config_dir }}/daemon.json"
+  notify: start docker
+
+- name: Install docker sdk for python
+  yum:
+    name: python-docker-py
+    state: present

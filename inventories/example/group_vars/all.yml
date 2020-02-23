@@ -1,0 +1,47 @@
+# docker
+docker_version: "19.03.4"
+docker_storage_dir: "/data/docker"
+docker_cgroup_driver: "systemd"
+# etcd
+etcd_version: "3.4.3"
+etcd_certs_dir: "/etc/kubernetes/pki/etcd"
+etcd_ca_cert: "/etc/kubernetes/pki/etcd/ca.crt"
+etcd_ca_key: "/etc/kubernetes/pki/etcd/ca.key"
+# kubernetes
+kubernetes_version: "1.17.3"
+kubernetes_conf_dir: "/etc/kubernetes"
+kubernetes_certs_dir: "/etc/kubernetes/pki"
+kubernetes_ca_key: "/etc/kubernetes/pki/ca.key"
+kubernetes_ca_cert: "/etc/kubernetes/pki/ca.crt"
+kubelet_manifests_dir: "/etc/kubernetes/manifests"
+kubernetes_cluster_name: "kubernetes"
+kubernetes_cluster_ip_range: "10.96.0.0/16"
+kubernetes_service_ip: "10.96.0.1"
+kubernetes_cluster_dns: "10.96.0.10"
+kubernetes_cluster_domain: "cluster.local"
+kubernetes_image_repo: "gcr.azk8s.cn/google_containers"
+kubernetes_apiserver_lb_ip: "127.0.0.1"
+kubernetes_apiserver_lb_port: "8443"
+kubernetes_apiserver_lb_url: "https://{{ kubernetes_apiserver_lb_ip }}:{{ kubernetes_apiserver_lb_port }}"
+kubernetes_bootstrap_token: "{{ lookup('file', local_token_csv) }}"
+kubernetes_kubeconfig_bootstrap_conf: "/etc/kubernetes/bootstrap-kubelet.conf"
+kubernetes_kubeconfig_admin_conf: "/etc/kubernetes/admin.conf"
+kubernetes_logs_dir: "/var/log/kubernetes"
+kubernetes_addons_dir: "/etc/kubernetes/addons"
+# openssl
+openssl_conf: "/etc/kubernetes/pki/openssl.cnf"
+# local
+local_bin_dir: "{{ inventory_dir| regex_replace('inventories.*$','.bin') }}"
+local_certs_dir: "{{ inventory_dir| regex_replace('inventories.*$','.cert') }}"
+local_etcd_ca_key: "{{ local_certs_dir }}/etcd_ca.key"
+local_etcd_ca_cert: "{{ local_certs_dir }}/etcd_ca.crt"
+local_kube_ca_key: "{{ local_certs_dir }}/kube_ca.key"
+local_kube_ca_cert: "{{ local_certs_dir }}/kube_ca.crt"
+local_front_proxy_ca_key: "{{ local_certs_dir }}/front-proxy-ca.key"
+local_front_proxy_ca_cert: "{{ local_certs_dir }}/front-proxy-ca.cert"
+local_sa_key: "{{ local_certs_dir }}/sa.key"
+local_sa_pub: "{{ local_certs_dir }}/sa.pub"
+local_token_csv: "{{ local_certs_dir }}/token.csv"
+# vagrant
+is_vagrant_vm: yes
+vagrant_ifname: eth1

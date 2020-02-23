@@ -1,0 +1,15 @@
+---
+- name: Create kubernetes cert directory
+  file:
+    path: "{{ kubernetes_certs_dir }}"
+    state: directory
+
+- name: Copy ca.key and ca.crt to kubernetes master nodes
+  copy:
+    src: "{{ item }}"
+    dest: "{{ kubernetes_certs_dir }}/{{ item|basename|replace('kube_','') }}"
+    mode: 0644
+    owner: root
+  with_items:
+  - "{{ local_kube_ca_key }}"
+  - "{{ local_kube_ca_cert }}"

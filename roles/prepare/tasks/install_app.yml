@@ -1,0 +1,12 @@
+---
+- name: Install common application
+  yum:
+    name: "{{ prepare_common_app }}"
+    state: present
+
+- name: Install ntp
+  yum:
+    name: ntp
+    state: present
+  notify:
+  - start ntpd

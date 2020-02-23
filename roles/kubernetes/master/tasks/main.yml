@@ -1,0 +1,6 @@
+---
+- include: master_install.yml
+- include: master_certs.yml
+- include: master_kubeconfig.yml
+- include: master_systemd.yml
+- include: master_bootstrap.yml

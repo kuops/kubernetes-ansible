@@ -1,0 +1,8 @@
+[ req ]
+distinguished_name = req_distinguished_name
+
+[req_distinguished_name]
+
+[ v3_ca ]
+basicConstraints = critical, CA:TRUE
+keyUsage = critical, digitalSignature, keyEncipherment, keyCertSign

@@ -1,0 +1,177 @@
+---
+- name: Loading the kernel module on runtime
+  modprobe:
+    name: "{{ item }}"
+    state: present
+  changed_when: no
+  with_items: "{{ prepare_kernel_modules }}"
+
+- name: Loading the kernel module on startup
+  copy:
+    dest: /etc/modules-load.d/kube.conf
+    content: |
+      {% for module in prepare_kernel_modules %}
+      {{ module }}
+      {% endfor%}
+
+- name: Setting sysctl options
+  block:
+  - sysctl:
+      name: net.ipv4.ip_forward
+      value: '1'
+      state: present
+  - sysctl:
+      name: net.ipv4.conf.all.rp_filter
+      value: '0'
+      state: present
+  - sysctl:
+      name: net.ipv4.conf.all.proxy_arp
+      value: '1'
+      state: present
+  - sysctl:
+      name: net.ipv4.tcp_keepalive_time
+      value: '600'
+      state: present
+  - sysctl:
+      name: net.ipv4.tcp_keepalive_intvl
+      value: '60'
+      state: present
+  - sysctl:
+      name: net.ipv4.tcp_keepalive_probes
+      value: '20'
+      state: present
+  - sysctl:
+      name: net.ipv4.ip_nonlocal_bind
+      value: '1'
+      state: present
+  - sysctl:
+      name: net.ipv4.conf.all.accept_redirects
+      value: '1'
+      state: present
+  - sysctl:
+      name: net.ipv4.conf.all.send_redirects
+      value: '1'
+      state: present
+  - sysctl:
+      name: net.ipv4.conf.all.accept_source_route
+      value: '1'
+      state: present
+  - sysctl:
+      name: net.ipv4.conf.all.shared_media
+      value: '1'
+      state: present
+  - sysctl:
+      name: net.ipv6.conf.all.disable_ipv6
+      value: '1'
+      state: present
+  - sysctl:
+      name: net.core.netdev_max_backlog
+      value: '182757'
+  - sysctl:
+      name: net.bridge.bridge-nf-call-iptables
+      value: '1'
+      state: present
+  - sysctl:
+      name: net.bridge.bridge-nf-call-ip6tables
+      value: '1'
+      state: present
+  - sysctl:
+      name: fs.inotify.max_queued_events
+      value: '1048576'
+      state: present
+  - sysctl:
+      name: fs.inotify.max_user_instances
+      value: '1048576'
+      state: present
+  - sysctl:
+      name: fs.inotify.max_user_watches
+      value: '1048576'
+      state: present
+  - sysctl:
+      name: vm.max_map_count
+      value: '262144'
+      state: present
+  - sysctl:
+      name: kernel.dmesg_restrict
+      value: '0'
+      state: present
+  - sysctl:
+      name: net.ipv4.tcp_max_syn_backlog
+      value: '4096'
+      state: present
+  - sysctl:
+      name: net.ipv4.tcp_syncookies
+      value: '1'
+      state: present
+  - sysctl:
+      name: net.core.somaxconn
+      value: '1024'
+      state: present
+  - sysctl:
+      name: net.core.netdev_max_backlog
+      value: '2500'
+      state: present
+  - sysctl:
+      name: net.core.rmem_max
+      value: '25165824'
+      state: present
+  - sysctl:
+      name: net.core.wmem_max
+      value: '25165824'
+      state: present
+  - sysctl:
+      name: net.ipv4.tcp_mem
+      value: '786432 2097152 3145728'
+      state: present
+  - sysctl:
+      name: net.ipv4.tcp_rmem
+      value: '4096 87380 16777216'
+      state: present
+  - sysctl:
+      name: net.ipv4.tcp_wmem
+      value: '4096 87380 16777216'
+      state: present
+  - sysctl:
+      name: kernel.pid_max
+      value: '65536'
+      state: present
+  - sysctl:
+      name: net.nf_conntrack_max
+      value: '655350'
+      state: present
+  - sysctl:
+      name: net.netfilter.nf_conntrack_max
+      value: '655350'
+      state: present
+  - sysctl:
+      name: vm.max_map_count
+      value: '65536'
+      state: present
+  - sysctl:
+      name: net.ipv4.neigh.default.gc_thresh1
+      value: '4096'
+      state: present
+  - sysctl:
+      name: net.ipv4.neigh.default.gc_thresh2
+      value: '8192'
+      state: present
+  - sysctl:
+      name: net.ipv4.neigh.default.gc_thresh3
+      value: '20480'
+      state: present
+  - sysctl:
+      name: net.ipv6.neigh.default.gc_thresh1
+      value: '4096'
+      state: present
+  - sysctl:
+      name: net.ipv6.neigh.default.gc_thresh2
+      value: '8192'
+      state: present
+  - sysctl:
+      name: net.ipv6.neigh.default.gc_thresh3
+      value: '20480'
+      state: present
+  - sysctl:
+      name: net.ipv4.tcp_max_tw_buckets
+      value: '262144'
+      state: present

@@ -1,0 +1,29 @@
+---
+- name: Create kubernetes addons dir
+  file:
+    path: "{{ kubernetes_addons_dir }}"
+    state: directory
+
+- name: Create kubernetes bootstrap secret and clusterrolebinding
+  template:
+    src: kube-bootstrap.yaml.j2
+    dest: "{{ kubernetes_addons_dir }}/kube-bootstrap.yaml"
+  delegate_to: "{{ groups['kube_master'][0] }}"
+  register: kube_bootstrap
+  run_once: yes
+
+- name: Wait apiserver upstrat
+  wait_for:
+    host: 127.0.0.1
+    port: "{{ kubernetes_apiserver_lb_port }}"
+    delay: 10
+
+- name: Apply bootstrap secret and rolebinding
+  shell: |
+    kubectl --kubeconfig={{ kubernetes_kubeconfig_admin_conf }} \
+    apply -f {{ kubernetes_addons_dir }}/kube-bootstrap.yaml
+  environment:
+    PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
+  delegate_to: "{{ groups['kube_master'][0] }}"
+  run_once: yes
+  when: kube_bootstrap.changed

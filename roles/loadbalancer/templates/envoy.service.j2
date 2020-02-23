@@ -1,0 +1,20 @@
+[Unit]
+Description=Envoy Container
+After=docker.service
+Requires=docker.service
+
+[Service]
+TimeoutStartSec=0
+Restart=always
+ExecStartPre=-/usr/bin/docker stop envoy
+ExecStartPre=-/usr/bin/docker rm envoy
+ExecStartPre=/usr/bin/docker pull envoyproxy/envoy:latest
+ExecStart=/usr/bin/docker run --rm \
+  -v /etc/envoy/envoy.yaml:/etc/envoy/envoy.yaml \
+  -v /var/log/envoy/:/var/log/envoy/ \
+  --network host \
+  --name envoy \
+  envoyproxy/envoy:latest
+
+[Install]
+WantedBy=multi-user.target

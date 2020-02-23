@@ -1,0 +1,94 @@
+---
+- name: Create etcd cert directory
+  file:
+    path: "{{ etcd_certs_dir }}"
+    state: directory
+
+- name: Copy local ca.key and ca.crt to etcd nodes
+  copy:
+    src: "{{ item }}"
+    dest: "{{ etcd_certs_dir }}/{{ item|basename|replace('etcd_','') }}"
+    mode: 0644
+    owner: root
+  register: etcd_copy_ca
+  with_items:
+  - "{{ local_etcd_ca_key }}"
+  - "{{ local_etcd_ca_cert }}"
+
+- name: Check etcd server.cert exists
+  stat:
+    path: "{{ etcd_server_cert }}"
+  register: etcd_server_cert_stat
+
+- name: Check etcd server.key exists
+  stat:
+    path: "{{ etcd_server_key }}"
+  register: etcd_server_key_stat
+
+- name: Create etcd server.key and server.cert
+  shell: |
+    openssl genrsa -out {{ etcd_server_key }} 2048
+    openssl req -new -key {{ etcd_server_key }} \
+      -subj "{{ etcd_server_subj }}" -out {{ etcd_server_csr }}
+    openssl x509 -in {{ etcd_server_csr }} -req \
+      -CA {{ etcd_ca_cert }} -CAkey {{ etcd_ca_key }} \
+      -CAcreateserial \
+      -extensions v3_req_etcd \
+      -extfile {{ openssl_conf }} \
+      -out {{ etcd_server_cert }} -days 36500
+  when: >
+    etcd_copy_ca.changed or
+    not etcd_server_key_stat.stat.exists or
+    not etcd_server_cert_stat.stat.exists
+
+- name: Check peer cert exists
+  stat:
+    path: "{{ etcd_peer_cert }}"
+  register: etcd_peer_cert_stat
+
+- name: Check peer key exists
+  stat:
+    path: "{{ etcd_peer_key }}"
+  register: etcd_peer_key_stat
+
+- name: Create etcd peer key and cert
+  shell: |
+    openssl genrsa -out {{ etcd_peer_key }} 2048
+    openssl req -new -key {{ etcd_peer_key }} \
+      -subj "{{ etcd_peer_subj }}" -out {{ etcd_peer_csr }}
+    openssl x509 -in {{ etcd_peer_csr }} -req \
+      -CA {{ etcd_ca_cert }} -CAkey {{ etcd_ca_key }} \
+      -CAcreateserial \
+      -extensions v3_req_etcd \
+      -extfile {{ openssl_conf }} \
+      -out {{ etcd_peer_cert }} -days 36500
+  when: >
+    etcd_copy_ca.changed or
+    not etcd_peer_cert_stat.stat.exists or
+    not etcd_peer_key_stat.stat.exists
+
+- name: Check etcd healthcheck-client cert exists
+  stat:
+    path: "{{ etcd_healthcheck_client_cert }}"
+  register: etcd_healthcheck_client_cert_stat
+
+- name: Check etcd healthcheck-client key exists
+  stat:
+    path: "{{ etcd_healthcheck_client_key }}"
+  register: etcd_healthcheck_client_key_stat
+
+- name: Create etcd healthcheck-client key and cert
+  shell: |
+    openssl genrsa -out {{ etcd_healthcheck_client_key }} 2048
+    openssl req -new -key {{ etcd_healthcheck_client_key }} \
+      -subj "{{ etcd_healthcheck_client_subj }}" -out {{ etcd_healthcheck_client_csr }}
+    openssl x509 -in {{ etcd_healthcheck_client_csr }} -req \
+      -CA {{ etcd_ca_cert }} -CAkey {{ etcd_ca_key }} \
+      -CAcreateserial \
+      -extensions v3_req_client \
+      -extfile {{ openssl_conf }} \
+      -out {{ etcd_healthcheck_client_cert }} -days 36500
+  when: >
+    etcd_copy_ca.changed or
+    not etcd_healthcheck_client_cert_stat.stat.exists or
+    not etcd_healthcheck_client_key_stat.stat.exists
