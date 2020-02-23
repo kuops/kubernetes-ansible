@@ -1,6 +1,7 @@
 # Kubernetes-Ansible
 
 [![Build Status](https://travis-ci.com/kuops/kubernetes-ansible.svg?branch=master)](https://travis-ci.com/kuops/kubernetes-ansible)
+[![Repo Size](https://img.shields.io/github/repo-size/kuops/kubernetes-ansible)](https://github.com/kuops/kubernetes-ansible)
 
 <!-- markdownlint-disable MD013 -->
 This Repository is Using Ansible Deploy a Production high availability Kubernetes Cluster. Roles step Fllow the offical tools Kubeadm.
