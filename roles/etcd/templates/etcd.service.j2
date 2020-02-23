@@ -1,0 +1,38 @@
+{% macro initial_cluster() -%}
+{% for host in groups['etcd'] -%}
+  infra{{ loop.index0 }}=https://{{ hostvars[host].ansible_host_ip }}:2380
+  {%- if not loop.last -%},{%- endif -%}
+{%- endfor -%}
+{% endmacro -%}
+
+
+[Unit]
+Description=etcd
+Documentation=https://github.com/coreos
+
+[Service]
+ExecStart=/usr/local/bin/etcd \
+    --advertise-client-urls=https://{{ ansible_host_ip }}:2379 \
+    --cert-file={{ etcd_server_cert }} \
+    --client-cert-auth=true \
+    --data-dir={{ etcd_data_dir }} \
+    --initial-advertise-peer-urls=https://{{ ansible_host_ip }}:2380 \
+    --initial-cluster={{ initial_cluster() }} \
+    --initial-cluster-state=new \
+    --key-file={{ etcd_server_key }} \
+    --listen-client-urls=https://{{ ansible_host_ip }}:2379,https://127.0.0.1:2379 \
+    --listen-metrics-urls=http://{{ ansible_host_ip }}:2381 \
+    --listen-peer-urls=https://{{ ansible_host_ip }}:2380 \
+    --name=infra{{ groups['etcd'].index(ansible_hostname) }} \
+    --peer-cert-file={{ etcd_peer_cert }} \
+    --peer-client-cert-auth=true \
+    --peer-key-file={{ etcd_peer_key }} \
+    --peer-trusted-ca-file={{ etcd_ca_cert }} \
+    --snapshot-count=10000 \
+    --trusted-ca-file={{ etcd_ca_cert }}
+Restart=on-failure
+RestartSec=5
+Type=notify
+
+[Install]
+WantedBy=multi-user.target

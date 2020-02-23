@@ -1,0 +1,47 @@
+---
+- name: Create kubernetes log directory
+  file:
+    path: "{{ kubernetes_logs_dir }}"
+    state: directory
+
+- name: Create kube-apiserver systemd unit file
+  template:
+    src: kube-apiserver.service.j2
+    dest: /etc/systemd/system/kube-apiserver.service
+  notify:
+  - restart kube-apiserver
+
+- name: Enable and started kube-apiserver service
+  systemd:
+    state: started
+    daemon_reload: yes
+    name: kube-apiserver
+    enabled: yes
+
+- name: Create kube-controller-manager systemd unit file
+  template:
+    src: kube-controller-manager.service.j2
+    dest: /etc/systemd/system/kube-controller-manager.service
+  notify:
+  - restart kube-controller-manager
+
+- name: Enable and started kube-controller-manager service
+  systemd:
+    state: started
+    daemon_reload: yes
+    name: kube-controller-manager
+    enabled: yes
+
+- name: Create kube-scheduler systemd unit file
+  template:
+    src: kube-scheduler.service.j2
+    dest: /usr/lib/systemd/system/kube-scheduler.service
+  notify:
+  - restart kube-scheduler
+
+- name: Enable and started kube-scheduler service
+  systemd:
+    state: started
+    daemon_reload: yes
+    name: kube-scheduler
+    enabled: yes

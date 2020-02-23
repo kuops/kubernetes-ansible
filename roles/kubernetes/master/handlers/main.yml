@@ -1,0 +1,21 @@
+---
+- name: restart kube-apiserver
+  systemd:
+    state: restarted
+    daemon_reload: yes
+    name: kube-apiserver
+    enabled: yes
+
+- name: restart kube-controller-manager
+  systemd:
+    state: restarted
+    daemon_reload: yes
+    name: kube-controller-manager
+    enabled: yes
+
+- name: restart kube-scheduler
+  systemd:
+    state: restarted
+    daemon_reload: yes
+    name: kube-scheduler
+    enabled: yes

@@ -1,0 +1,162 @@
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: kube-proxy
+  namespace: kube-system
+---
+kind: ClusterRoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: system:kube-proxy
+subjects:
+  - kind: ServiceAccount
+    name: kube-proxy
+    namespace: kube-system
+roleRef:
+  kind: ClusterRole
+  name: system:node-proxier
+  apiGroup: rbac.authorization.k8s.io
+---
+apiVersion: v1
+data:
+  config.conf: |-
+    apiVersion: kubeproxy.config.k8s.io/v1alpha1
+    bindAddress: 0.0.0.0
+    clientConnection:
+      acceptContentTypes: ""
+      burst: 0
+      contentType: ""
+      kubeconfig: /var/lib/kube-proxy/kubeconfig.conf
+      qps: 0
+    clusterCIDR: ""
+    configSyncPeriod: 0s
+    conntrack:
+      maxPerCore: null
+      min: null
+      tcpCloseWaitTimeout: null
+      tcpEstablishedTimeout: null
+    enableProfiling: false
+    healthzBindAddress: ""
+    hostnameOverride: ""
+    iptables:
+      masqueradeAll: false
+      masqueradeBit: null
+      minSyncPeriod: 0s
+      syncPeriod: 0s
+    ipvs:
+      excludeCIDRs: null
+      minSyncPeriod: 0s
+      scheduler: ""
+      strictARP: false
+      syncPeriod: 0s
+    kind: KubeProxyConfiguration
+    metricsBindAddress: ""
+    mode: ""
+    nodePortAddresses: null
+    oomScoreAdj: null
+    portRange: ""
+    udpIdleTimeout: 0s
+    winkernel:
+      enableDSR: false
+      networkName: ""
+      sourceVip: ""
+  kubeconfig.conf: |-
+    apiVersion: v1
+    kind: Config
+    clusters:
+    - cluster:
+        certificate-authority: /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
+        server: https://10.7.0.101:6443
+      name: default
+    contexts:
+    - context:
+        cluster: default
+        namespace: default
+        user: default
+      name: default
+    current-context: default
+    users:
+    - name: default
+      user:
+        tokenFile: /var/run/secrets/kubernetes.io/serviceaccount/token
+kind: ConfigMap
+metadata:
+  labels:
+    app: kube-proxy
+  name: kube-proxy
+  namespace: kube-system
+---
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  labels:
+    k8s-app: kube-proxy
+  name: kube-proxy
+  namespace: kube-system
+spec:
+  revisionHistoryLimit: 10
+  selector:
+    matchLabels:
+      k8s-app: kube-proxy
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        k8s-app: kube-proxy
+    spec:
+      containers:
+      - command:
+        - /usr/local/bin/kube-proxy
+        - --config=/var/lib/kube-proxy/config.conf
+        - --hostname-override=$(NODE_NAME)
+        env:
+        - name: NODE_NAME
+          valueFrom:
+            fieldRef:
+              apiVersion: v1
+              fieldPath: spec.nodeName
+        image: gcr.azk8s.cn/google_containers/kube-proxy:v1.17.3
+        imagePullPolicy: IfNotPresent
+        name: kube-proxy
+        securityContext:
+          privileged: true
+        volumeMounts:
+        - mountPath: /var/lib/kube-proxy
+          name: kube-proxy
+        - mountPath: /run/xtables.lock
+          name: xtables-lock
+        - mountPath: /lib/modules
+          name: lib-modules
+          readOnly: true
+      dnsPolicy: ClusterFirst
+      hostNetwork: true
+      nodeSelector:
+        beta.kubernetes.io/os: linux
+      priorityClassName: system-node-critical
+      restartPolicy: Always
+      schedulerName: default-scheduler
+      serviceAccount: kube-proxy
+      serviceAccountName: kube-proxy
+      terminationGracePeriodSeconds: 30
+      tolerations:
+      - key: CriticalAddonsOnly
+        operator: Exists
+      - operator: Exists
+      volumes:
+      - configMap:
+          defaultMode: 420
+          name: kube-proxy
+        name: kube-proxy
+      - hostPath:
+          path: /run/xtables.lock
+          type: FileOrCreate
+        name: xtables-lock
+      - hostPath:
+          path: /lib/modules
+          type: ""
+        name: lib-modules
+  updateStrategy:
+    rollingUpdate:
+      maxUnavailable: 1
+    type: RollingUpdate

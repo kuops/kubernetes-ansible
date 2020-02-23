@@ -1,0 +1,5 @@
+---
+- include: node_install.yml
+- include: node_certs.yml
+- include: node_kubeconfig.yml
+

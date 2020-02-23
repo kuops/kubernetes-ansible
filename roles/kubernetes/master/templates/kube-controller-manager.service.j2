@@ -1,0 +1,28 @@
+[Unit]
+Description=Kubernetes Controller Manager
+Documentation=https://github.com/kubernetes/kubernetes
+After=network.target
+
+[Service]
+ExecStart=/usr/local/bin/kube-controller-manager  \
+  --authentication-kubeconfig={{ kubernetes_kubeconfig_controller_manager_conf }} \
+  --authorization-kubeconfig={{ kubernetes_kubeconfig_controller_manager_conf }} \
+  --bind-address=127.0.0.1 \
+  --client-ca-file={{ kubernetes_ca_cert }} \
+  --cluster-signing-cert-file={{ kubernetes_ca_cert }} \
+  --cluster-signing-key-file={{ kubernetes_ca_key }} \
+  --controllers=*,bootstrapsigner,tokencleaner \
+  --kubeconfig={{ kubernetes_kubeconfig_controller_manager_conf }} \
+  --leader-elect=true \
+  --requestheader-client-ca-file={{ kubernetes_front_proxy_ca_cert }} \
+  --root-ca-file={{ kubernetes_ca_cert }} \
+  --service-account-private-key-file={{ kubernetes_sa_key }} \
+  --use-service-account-credentials=true \
+  --cluster-name={{ kubernetes_cluster_name }} \
+  --logtostderr=false \
+  --log-file={{ kubernetes_controller_manager_logfile }}
+Restart=always
+RestartSec=10s
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,8 @@
+---
+- include: disable_selinux.yml
+- include: disable_swap.yml
+- include: change_repo.yml
+- include: change_settings.yml
+- include: install_app.yml
+- include: tuning_system.yml
+- include: upgrade_kernel.yml

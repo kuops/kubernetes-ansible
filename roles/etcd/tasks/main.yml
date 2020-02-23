@@ -1,0 +1,4 @@
+---
+- include: etcd_install.yml
+- include: etcd_certs.yml
+- include: etcd_systemd.yml

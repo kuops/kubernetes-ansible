@@ -1,0 +1,16 @@
+---
+- name: reboot system
+  reboot:
+
+- name: reload NetworkManager
+  systemd:
+    state: reloaded
+    daemon_reload: yes
+    name: NetworkManager
+
+- name: start ntpd
+  systemd:
+    state: started
+    daemon_reload: yes
+    name: ntpd
+    enabled: yes

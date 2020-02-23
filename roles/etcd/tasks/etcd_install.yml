@@ -1,0 +1,16 @@
+---
+- name: Create etcd data directory
+  file:
+    path: "{{ etcd_data_dir }}"
+    state: directory
+
+- name: Copy etcd binaries to destination directory
+  copy:
+    src: "{{ local_bin_dir }}/etcd-v{{ etcd_version }}-linux-amd64/{{ item }}"
+    dest: "/usr/local/bin/{{ item }}"
+    mode: 0755
+    owner: root
+    group: root
+  with_items:
+  - etcd
+  - etcdctl

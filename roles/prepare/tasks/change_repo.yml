@@ -1,0 +1,69 @@
+---
+- name: Disable fastmirrors
+  lineinfile:
+    path: "{{ prepare_yum_fastmirror_conf }}"
+    regexp: '^enabled=1'
+    line: enabled=0
+
+- name: Check yum base repo exists
+  stat:
+    path: "{{ prepare_yum_base_repo }}"
+  register: base_repo
+
+- name: Replace Baserepo to {{ prepare_yum_mirror_url }}
+  get_url:
+    url: "{{ prepare_yum_mirror_base_repo }}"
+    dest: "{{ prepare_yum_base_repo }}"
+    mode: '0644'
+  when: not base_repo.stat.exists
+
+- name: Check epel repo exists
+  stat:
+    path: "{{ prepare_yum_epel_repo }}"
+  register: epel_repo
+
+- name: Replace epel repo to {{ prepare_yum_mirror_url }}
+  get_url:
+    url: "{{ prepare_yum_mirror_epel_repo }}"
+    dest: "{{ prepare_yum_epel_repo }}"
+    mode: '0644'
+  when: not epel_repo.stat.exists
+
+- name: Register remote host repo files
+  find:
+    patterns: '*.repo'
+    paths: /etc/yum.repos.d/
+    recurse: yes
+  register: find_repo
+  when: prepare_yum_remove_internal_url
+
+- name: Remove internalurl aliyuncs on repo files
+  lineinfile:
+    path: "{{ item.path }}"
+    regexp: "{{ prepare_yum_internal_pattern }}"
+    state: absent
+  with_items: "{{ find_repo.files }}"
+  when: prepare_yum_remove_internal_url
+
+- name: Install ELRepo
+  yum_repository:
+    name: elrepo-kernel
+    description: ELRepo.org Community Enterprise Linux Kernel Repository – el7
+    baseurl: "{{ prepare_yum_elrepo_baseurl }}"
+    gpgcheck: no
+
+- name:  Install docker repo
+  yum_repository:
+    name: docker-ce-stable
+    description: Docker CE Stable - $basearch
+    baseurl: "{{ prepare_yum_docker_repo_baseurl }}"
+    gpgcheck: yes
+    gpgkey: "{{ prepare_yum_docker_repo_gpgkey }}"
+
+- name:  Install kubernetes repo
+  yum_repository:
+    name: kubernetes
+    description: Kubernetes
+    baseurl: "{{ prepare_yum_kube_repo_baseurl }}"
+    gpgcheck: yes
+    gpgkey: "{{ prepare_yum_kube_repo_gpgkey }}"

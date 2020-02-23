@@ -1,0 +1,16 @@
+---
+rumtimes_docker_apps:
+- "docker-ce-{{ docker_version }}"
+- "docker-ce-cli-{{ docker_version }}"
+runtimes_docker_data_root: "{{ docker_storage_dir }}"
+runtimes_docker_config_dir: "/etc/docker"
+runtimes_docker_registry_mirrors: 
+- "https://dockerhub.azk8s.cn"
+- "https://docker.mirrors.ustc.edu.cn"
+runtimes_docker_log_driver: json-file
+runtimes_docker_log_opts: 
+  max-size: 100m
+  max-file: 3
+runtimes_docker_storage_driver: overlay2
+runtimes_docker_storage_opts: 
+- "overlay2.override_kernel_check=true"

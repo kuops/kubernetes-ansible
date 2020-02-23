@@ -1,0 +1,14 @@
+---
+- name: Copy kubernetes master binaries to destination directory
+  copy:
+    src: "{{ local_bin_dir }}/kubernetes/server/bin/{{ item }}"
+    dest: "/usr/local/bin/{{ item }}"
+    mode: 0755
+    owner: root
+    group: root
+  with_items:
+  - kubelet
+  - kubectl
+  - kube-apiserver
+  - kube-controller-manager
+  - kube-scheduler

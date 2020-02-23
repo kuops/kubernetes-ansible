@@ -1,0 +1,49 @@
+[ req ]
+distinguished_name = req_distinguished_name
+
+[req_distinguished_name]
+
+[ v3_ca ]
+basicConstraints = critical, CA:TRUE
+keyUsage = critical, digitalSignature, keyEncipherment, keyCertSign
+
+[ v3_req_etcd ]
+keyUsage = critical, digitalSignature, keyEncipherment
+extendedKeyUsage = serverAuth, clientAuth
+subjectAltName = @alt_names_etcd
+
+[ v3_req_apiserver ]
+keyUsage = critical, digitalSignature, keyEncipherment
+extendedKeyUsage = serverAuth
+subjectAltName = @alt_names_apiserver
+
+[ v3_req_server ]
+keyUsage = critical, digitalSignature, keyEncipherment
+extendedKeyUsage = serverAuth
+
+[ v3_req_client ]
+keyUsage = critical, digitalSignature, keyEncipherment
+extendedKeyUsage = clientAuth
+
+[ alt_names_etcd ]
+DNS.1 = {{ ansible_hostname }}
+DNS.2 = localhost
+IP.1 = 127.0.0.1
+IP.2 = ::1
+{% for ip in physical_ip.ips %}
+{% set count = loop.index + 2 %}
+IP.{{ count }} = {{ ip }}
+{% if not loop.last -%}{%- endif -%}
+{% endfor %}
+
+[ alt_names_apiserver ]
+DNS.1 = kubernetes
+DNS.2 = kubernetes.default
+DNS.3 = kubernetes.default.svc
+DNS.4 = kubernetes.default.svc.cluster.local
+DNS.5 = localhost
+DNS.6 = {{ ansible_hostname }}
+IP.1 = 127.0.0.1
+IP.2 = ::1
+IP.3 = {{ ansible_host_ip }}
+IP.4 = {{ kubernetes_service_ip }}

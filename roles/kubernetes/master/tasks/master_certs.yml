@@ -1,0 +1,260 @@
+---
+- name: Create kubernetes cert directory
+  file:
+    path: "{{ kubernetes_certs_dir }}"
+
+- name: Copy ca.key and ca.crt to kubernetes master nodes
+  copy:
+    src: "{{ item }}"
+    dest: "{{ kubernetes_certs_dir }}/{{ item|basename|replace('kube_','') }}"
+    mode: 0644
+    owner: root
+  register: master_copy_ca
+  with_items:
+  - "{{ local_kube_ca_key }}"
+  - "{{ local_kube_ca_cert }}"
+
+- name: Check apiserver cert exists
+  stat:
+    path: "{{ kubernetes_apiserver_cert }}"
+  register: kubernetes_apiserver_cert_stat
+
+- name: Check apiserver key exists
+  stat:
+    path: "{{ kubernetes_apiserver_key }}"
+  register: kubernetes_apiserver_key_stat
+
+- name: Create apiserver key and cert
+  shell: |
+    openssl genrsa -out {{ kubernetes_apiserver_key }} 2048
+    openssl req -new -key {{ kubernetes_apiserver_key }} \
+      -subj "{{ kubernetes_apiserver_subj }}" -out {{ kubernetes_apiserver_csr }}
+    openssl x509 -in {{ kubernetes_apiserver_csr }} -req \
+      -CA {{ kubernetes_ca_cert }} -CAkey {{ kubernetes_ca_key }} \
+      -CAcreateserial \
+      -extensions v3_req_apiserver \
+      -extfile {{ openssl_conf }} \
+      -out {{ kubernetes_apiserver_cert }} -days 36500
+  when: >
+    master_copy_ca.changed or
+    not kubernetes_apiserver_key_stat.stat.exists or
+    not kubernetes_apiserver_cert_stat.stat.exists
+
+- name: Check apiserver-kubelet-client cert exists
+  stat:
+    path: "{{ kubernetes_apiserver_kubelet_client_cert }}"
+  register: kubernetes_apiserver_kubelet_client_cert_stat
+
+- name: Check apiserver-kubelet-client key exists
+  stat:
+    path: "{{ kubernetes_apiserver_kubelet_client_key }}"
+  register: kubernetes_apiserver_kubelet_client_key_stat
+
+- name: Create kubernetes apiserver-kubelet-client key and cert
+  shell: |
+    openssl genrsa -out {{ kubernetes_apiserver_kubelet_client_key }} 2048
+    openssl req -new -key {{ kubernetes_apiserver_kubelet_client_key }} \
+      -subj "{{ kubernetes_apiserver_kubelet_client_subj }}" -out {{ kubernetes_apiserver_kubelet_client_csr }}
+    openssl x509 -in {{ kubernetes_apiserver_kubelet_client_csr }} -req \
+      -CA {{ kubernetes_ca_cert }} -CAkey {{ kubernetes_ca_key }} \
+      -CAcreateserial \
+      -extensions v3_req_client \
+      -extfile {{ openssl_conf }} \
+      -out {{ kubernetes_apiserver_kubelet_client_cert }} -days 36500
+  when: >
+    master_copy_ca.changed or
+    not kubernetes_apiserver_kubelet_client_key_stat.stat.exists or
+    not kubernetes_apiserver_kubelet_client_cert_stat.stat.exists
+
+- name: Copy front-proxy-ca.key and front-proxy-ca.crt to kubernetes master nodes
+  copy:
+    src: "{{ item }}"
+    dest: "{{ kubernetes_certs_dir }}/{{ item|basename }}"
+    mode: 0644
+    owner: root
+  register: master_copy_front_proxy_ca
+  with_items:
+  - "{{ local_front_proxy_ca_key }}"
+  - "{{ local_front_proxy_ca_cert }}"
+
+- name: Check front-proxy-client cert exists
+  stat:
+    path: "{{ kubernetes_front_proxy_client_cert }}"
+  register: kubernetes_front_proxy_client_cert_stat
+
+- name: Check front-proxy-client key exists
+  stat:
+    path: "{{ kubernetes_front_proxy_client_key }}"
+  register: kubernetes_front_proxy_client_key_stat
+
+- name: Create front-proxy-client key and cert
+  shell: |
+    openssl genrsa -out {{ kubernetes_front_proxy_client_key }} 2048
+    openssl req -new -key {{ kubernetes_front_proxy_client_key }} \
+      -subj "{{ kubernetes_front_proxy_client_subj }}" -out {{ kubernetes_front_proxy_client_csr }}
+    openssl x509 -in {{ kubernetes_front_proxy_client_csr }} -req \
+      -CA {{ kubernetes_front_proxy_ca_cert }} -CAkey {{ kubernetes_front_proxy_ca_key }} \
+      -CAcreateserial \
+      -extensions v3_req_client \
+      -extfile {{ openssl_conf }} \
+      -out {{ kubernetes_front_proxy_client_cert }} -days 36500
+  when: >
+    master_copy_front_proxy_ca.changed or
+    not kubernetes_front_proxy_client_cert_stat.stat.exists or
+    not kubernetes_front_proxy_client_key_stat.stat.exists
+
+- name: Copy sa.key and sa.pub to kubernetes master nodes
+  copy:
+    src: "{{ item }}"
+    dest: "{{ kubernetes_certs_dir }}/{{ item|basename }}"
+    mode: 0644
+    owner: root
+  with_items:
+  - "{{ local_sa_key }}"
+  - "{{ local_sa_pub }}"
+
+- name: Create etcd cert directory
+  file:
+    path: "{{ etcd_certs_dir }}"
+    state: directory
+
+- name: Copy ca.key and ca.crt to etcd nodes
+  copy:
+    src: "{{ item }}"
+    dest: "{{ etcd_certs_dir }}/{{ item|basename|replace('etcd_','') }}"
+    mode: 0644
+    owner: root
+  register: etcd_copy_ca
+  with_items:
+  - "{{ local_etcd_ca_key }}"
+  - "{{ local_etcd_ca_cert }}"
+
+- name: Check apiserver etcd client cert exists
+  stat:
+    path: "{{ kubernetes_etcd_apiserver_client_cert }}"
+  register: kubernetes_etcd_apiserver_client_cert_stat
+
+- name: Check apiserver etcd client key exists
+  stat:
+    path: "{{ kubernetes_etcd_apiserver_client_key }}"
+  register: kubernetes_etcd_apiserver_client_key_stat
+
+- name: Create apiserver etcd client key and cert
+  shell: |
+    openssl genrsa -out {{ kubernetes_etcd_apiserver_client_key }} 2048
+    openssl req -new -key {{ kubernetes_etcd_apiserver_client_key }} \
+      -subj "{{ kubernetes_etcd_apiserver_client_subj }}" -out {{ kubernetes_etcd_apiserver_client_csr }}
+    openssl x509 -in {{ kubernetes_etcd_apiserver_client_csr }} -req \
+      -CA {{ etcd_ca_cert }} -CAkey {{ etcd_ca_key }} \
+      -CAcreateserial \
+      -extensions v3_req_client \
+      -extfile {{ openssl_conf }} \
+      -out {{ kubernetes_etcd_apiserver_client_cert }} -days 36500
+  when: >
+    etcd_copy_ca.changed or
+    not kubernetes_etcd_apiserver_client_cert_stat.stat.exists or
+    not kubernetes_etcd_apiserver_client_key_stat.stat.exists
+
+- name: Check kubeconfig admin.conf cert exists
+  stat:
+    path: "{{ kubernetes_kubeconfig_admin_cert }}"
+  register: kubernetes_kubeconfig_admin_cert_stat
+
+- name: Check kubeconfig admin.conf key exists
+  stat:
+    path: "{{ kubernetes_kubeconfig_admin_key }}"
+  register: kubernetes_kubeconfig_admin_key_stat
+
+- name: Create kubeconfig admin.conf key and cert
+  shell: |
+    openssl genrsa -out {{ kubernetes_kubeconfig_admin_key }} 2048
+    openssl req -new -key {{ kubernetes_kubeconfig_admin_key }} \
+      -subj "{{ kubernetes_kubeconfig_admin_subj }}" -out {{ kubernetes_kubeconfig_admin_csr }}
+    openssl x509 -in {{ kubernetes_kubeconfig_admin_csr }} -req \
+      -CA {{ kubernetes_ca_cert }} -CAkey {{ kubernetes_ca_key }} \
+      -CAcreateserial \
+      -extensions v3_req_client \
+      -extfile {{ openssl_conf }} \
+      -out {{ kubernetes_kubeconfig_admin_cert }} -days 36500
+  when: >
+    master_copy_ca.changed or
+    not kubernetes_kubeconfig_admin_key_stat.stat.exists or
+    not kubernetes_kubeconfig_admin_cert_stat.stat.exists
+
+- name: Check kubeconfig kubelet.conf cert exists
+  stat:
+    path: "{{ kubernetes_kubeconfig_kubelet_cert }}"
+  register: kubernetes_kubeconfig_kubelet_cert_stat
+
+- name: Check kubeconfig kubelet.conf key exists
+  stat:
+    path: "{{ kubernetes_kubeconfig_kubelet_key }}"
+  register: kubernetes_kubeconfig_kubelet_key_stat
+
+- name: Create kubeconfg kubelet.conf key and cert
+  shell: |
+    openssl genrsa -out {{ kubernetes_kubeconfig_kubelet_key }} 2048
+    openssl req -new -key {{ kubernetes_kubeconfig_kubelet_key }} \
+      -subj "/O=system:nodes/CN=system:node:{{ ansible_hostname }}" -out {{ kubernetes_kubeconfig_kubelet_csr }}
+    openssl x509 -in {{ kubernetes_kubeconfig_kubelet_csr }} -req \
+      -CA {{ kubernetes_ca_cert }} -CAkey {{ kubernetes_ca_key }} \
+      -CAcreateserial \
+      -extensions v3_req_client \
+      -extfile {{ openssl_conf }} \
+      -out {{ kubernetes_kubeconfig_kubelet_cert }} -days 36500
+  when: >
+    master_copy_ca.changed or
+    not kubernetes_kubeconfig_kubelet_key_stat.stat.exists or
+    not kubernetes_kubeconfig_kubelet_cert_stat.stat.exists
+
+- name: Check kubeconfig controller-manager.conf cert exists
+  stat:
+    path: "{{ kubernetes_kubeconfig_controller_manager_cert }}"
+  register: kubernetes_kubeconfig_controller_manager_cert_stat
+
+- name: Check kubeconfig controller-manager.conf key exists
+  stat:
+    path: "{{ kubernetes_kubeconfig_controller_manager_key }}"
+  register: kubernetes_kubeconfig_controller_manager_key_stat
+
+- name: Create kubeconfig controller-manager.conf key and cert
+  shell: |
+    openssl genrsa -out {{ kubernetes_kubeconfig_controller_manager_key }} 2048
+    openssl req -new -key {{ kubernetes_kubeconfig_controller_manager_key }} \
+      -subj "{{ kubernetes_kubeconfig_controller_manager_subj }}" -out {{ kubernetes_kubeconfig_controller_manager_csr }}
+    openssl x509 -in {{ kubernetes_kubeconfig_controller_manager_csr }} -req \
+      -CA {{ kubernetes_ca_cert }} -CAkey {{ kubernetes_ca_key }} \
+      -CAcreateserial \
+      -extensions v3_req_client \
+      -extfile {{ openssl_conf }} \
+      -out {{ kubernetes_kubeconfig_controller_manager_cert }} -days 36500
+  when: >
+    master_copy_ca.changed or
+    not kubernetes_kubeconfig_controller_manager_key_stat.stat.exists or
+    not kubernetes_kubeconfig_controller_manager_cert_stat.stat.exists
+
+- name: Check kubeconfig scheduler.conf cert exists
+  stat:
+    path: "{{ kubernetes_kubeconfig_scheduler_cert }}"
+  register: kubernetes_kubeconfig_scheduler_cert_stat
+
+- name: Check kubeconfig scheduler.conf key exists
+  stat:
+    path: "{{ kubernetes_kubeconfig_scheduler_key }}"
+  register: kubernetes_kubeconfig_scheduler_key_stat
+
+- name: Create kubeconfig scheduler.conf key and cert
+  shell: |
+    openssl genrsa -out {{ kubernetes_kubeconfig_scheduler_key }} 2048
+    openssl req -new -key {{ kubernetes_kubeconfig_scheduler_key }} \
+      -subj "{{ kubernetes_kubeconfig_scheduler_subj }}" -out {{ kubernetes_kubeconfig_scheduler_csr }}
+    openssl x509 -in {{ kubernetes_kubeconfig_scheduler_csr }} -req \
+      -CA {{ kubernetes_ca_cert }} -CAkey {{ kubernetes_ca_key }} \
+      -CAcreateserial \
+      -extensions v3_req_client \
+      -extfile {{ openssl_conf }} \
+      -out {{ kubernetes_kubeconfig_scheduler_cert }} -days 36500
+  when: >
+    master_copy_ca.changed or
+    not kubernetes_kubeconfig_scheduler_key_stat.stat.exists or
+    not kubernetes_kubeconfig_scheduler_cert_stat.stat.exists

@@ -1,0 +1,31 @@
+---
+- hosts: all
+  vars:
+    etcd_google_url: "https://storage.googleapis.com/etcd"
+    etcd_download_url: "{{ etcd_google_url }}/v{{ etcd_version }}/etcd-v{{ etcd_version }}-linux-amd64.tar.gz"
+    kubernetes_google_url: "https://storage.googleapis.com/kubernetes-release/release"
+    kubernetes_download_url: "{{ kubernetes_google_url }}/v{{ kubernetes_version }}/kubernetes-server-linux-amd64.tar.gz"
+  tasks:
+  - name: Downloading etcd offcial {{ etcd_version }}
+    get_url:
+      url: "{{ etcd_download_url }}"
+      dest: "{{ local_bin_dir }}/etcd-v{{ etcd_version }}-linux-amd64.tar.gz"
+    delegate_to: localhost
+
+  - name: Unarchive etcd release
+    unarchive:
+      src: "{{ local_bin_dir }}/etcd-v{{ etcd_version }}-linux-amd64.tar.gz"
+      dest: "{{ local_bin_dir }}"
+    delegate_to: localhost
+
+  - name: Download kuberentes offcial {{ kubernetes_version }}
+    get_url:
+      url: "{{ kubernetes_download_url }}"
+      dest: "{{ local_bin_dir }}/kubernetes-server-linux-amd64.tar.gz"
+    delegate_to: localhost
+
+  - name: Unarchive kubernetes release
+    unarchive:
+      src: "{{ local_bin_dir }}/kubernetes-server-linux-amd64.tar.gz"
+      dest: "{{ local_bin_dir }}"
+    delegate_to: localhost

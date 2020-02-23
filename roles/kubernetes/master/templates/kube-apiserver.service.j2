@@ -1,0 +1,48 @@
+{% macro etcd_servers() -%}
+{% for host in groups['etcd'] -%}
+  https://{{ hostvars[host].ansible_host_ip }}:2379
+  {%- if not loop.last -%},{%- endif -%}
+{%- endfor -%}
+{% endmacro -%}
+
+[Unit]
+Description=Kubernetes API Server
+Documentation=https://github.com/kubernetes/kubernetes
+After=network.target
+
+[Service]
+ExecStart=/usr/local/bin/kube-apiserver  \
+  --advertise-address={{ ansible_host_ip }}  \
+  --allow-privileged=true  \
+  --authorization-mode=Node,RBAC  \
+  --client-ca-file={{ kubernetes_ca_cert }} \
+  --enable-admission-plugins=NodeRestriction \
+  --enable-bootstrap-token-auth=true \
+  --etcd-cafile={{ etcd_ca_cert }}  \
+  --etcd-certfile={{ kubernetes_etcd_apiserver_client_cert }}  \
+  --etcd-keyfile={{ kubernetes_etcd_apiserver_client_key }}  \
+  --etcd-servers={{ etcd_servers() }}  \
+  --insecure-port=0  \
+  --kubelet-client-certificate={{ kubernetes_apiserver_kubelet_client_cert }}  \
+  --kubelet-client-key={{ kubernetes_apiserver_kubelet_client_key }}  \
+  --kubelet-preferred-address-types=InternalIP,ExternalIP,Hostname  \
+  --proxy-client-cert-file={{ kubernetes_front_proxy_client_cert }} \
+  --proxy-client-key-file={{ kubernetes_front_proxy_client_key }}  \
+  --requestheader-allowed-names=front-proxy-client  \
+  --requestheader-client-ca-file={{ kubernetes_front_proxy_ca_cert }} \
+  --requestheader-extra-headers-prefix=X-Remote-Extra-  \
+  --requestheader-group-headers=X-Remote-Group  \
+  --requestheader-username-headers=X-Remote-User  \
+  --secure-port=6443 \
+  --service-account-key-file={{ kubernetes_sa_pub }} \
+  --service-cluster-ip-range={{ kubernetes_cluster_ip_range }}  \
+  --tls-cert-file={{ kubernetes_apiserver_cert }}  \
+  --tls-private-key-file={{ kubernetes_apiserver_key }} \
+  --logtostderr=false \
+  --log-file={{ kubernetes_apiserver_logfile }}
+Restart=on-failure
+RestartSec=10s
+LimitNOFILE=65535
+
+[Install]
+WantedBy=multi-user.target

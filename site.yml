@@ -1,0 +1,3 @@
+---
+- import_playbook: playbooks/download_binary.yml
+- import_playbook: playbooks/kubernetes.yml

@@ -1,0 +1,14 @@
+---
+- name: Create openssl config directory
+  file:
+    path: "{{ openssl_conf| dirname }}"
+    state: directory
+
+- name: Get phusical ip address
+  physical_ipaddress:
+  register: physical_ip
+
+- name: Generate openssl config file
+  template:
+    src: openssl.cnf.j2
+    dest: "{{ openssl_conf }}"
