@@ -70,5 +70,5 @@
 
 - name: Update bashrc
   template:
-    src: calicoctl.yaml.j2
-    dest: "{{ kubernetes_addons_dir }}/calicoctl.yaml"
+    src: bashrc.j2
+    dest: "{{ ansible_env.HOME }}/.bashrc"
