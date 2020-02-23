@@ -70,3 +70,9 @@ inventories/example
 │   └── all.yml
 └── hosts
 ```
+
+run deploy:
+
+```bash
+ansible-playbook -i inventories/example/hosts site.yml
+```
