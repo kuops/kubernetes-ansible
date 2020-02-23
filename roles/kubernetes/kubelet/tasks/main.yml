@@ -9,6 +9,11 @@
   with_items:
   - kubelet
 
+- name: Create kubelet manifests directory
+  file:
+    path: "{{ kubernetes_manifests_dir }}"
+    state: directory
+
 - name: Create kubelet systemd service directory
   file:
     path: "{{ kubelet_systemd_conf_dir }}"
