@@ -52,21 +52,18 @@
   run_once: yes
   when: calico_addons.changed
 
-- name: Create calicoctl addons yaml
-  template:
-    src: calicoctl.yaml.j2
-    dest: "{{ kubernetes_addons_dir }}/calicoctl.yaml"
-  register: calicoctl_addons
+- name: Check calicoctl command exists
+  stat:
+    path: /usr/local/bin/calicoctl
+  register: calicoctl_cmd
 
-- name: Apply calicoctl deployment and rbac
+- name: install calicoctl command
   shell: |
-    kubectl --kubeconfig={{ kubernetes_kubeconfig_admin_conf }} \
-    apply -f {{ kubernetes_addons_dir }}/calicoctl.yaml
-  environment:
-    PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
-  delegate_to: "{{ groups['kube_master'][0] }}"
-  run_once: yes
-  when: calicoctl_addons.changed
+    docker pull calico/ctl:v3.12.0
+    docker run -dit --name calicoctl --rm --entrypoint /bin/sh calico/ctl:v3.12.0
+    docker cp calicoctl:/calicoctl /usr/local/bin/calicoctl
+    docker rm -f calicoctl
+  when: not  calicoctl_cmd.stat.exists
 
 - name: Update bashrc
   template:
