@@ -15,7 +15,7 @@
 - name: Apply kube-proxy ds and rbac
   shell: |
     kubectl --kubeconfig={{ kubernetes_kubeconfig_admin_conf }} \
-    apply -f {{ kubernetes_addons_dir }}//kube-proxy.yaml
+    apply -f {{ kubernetes_addons_dir }}/kube-proxy.yaml
   environment:
     PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
   delegate_to: "{{ groups['kube_master'][0] }}"
@@ -33,9 +33,27 @@
 - name: Apply coredns deployment and rbac
   shell: |
     kubectl --kubeconfig={{ kubernetes_kubeconfig_admin_conf }} \
-    apply -f {{ kubernetes_addons_dir }}//coredns.yaml
+    apply -f {{ kubernetes_addons_dir }}/coredns.yaml
   environment:
     PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
   delegate_to: "{{ groups['kube_master'][0] }}"
   run_once: yes
   when: coredns_addons.changed
+
+- name: Apply calico addons
+  template:
+    src: calico.yaml.j2
+    dest: "{{ kubernetes_addons_dir }}/calico.yaml"
+  delegate_to: "{{ groups['kube_master'][0] }}"
+  register: calico_addons
+  run_once: yes
+
+- name: Apply calico deployment and rbac
+  shell: |
+    kubectl --kubeconfig={{ kubernetes_kubeconfig_admin_conf }} \
+    apply -f {{ kubernetes_addons_dir }}/calico.yaml
+  environment:
+    PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
+  delegate_to: "{{ groups['kube_master'][0] }}"
+  run_once: yes
+  when: calico_addons.changed

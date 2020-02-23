@@ -5,29 +5,18 @@
     regexp: '^enabled=1'
     line: enabled=0
 
-- name: Check yum base repo exists
-  stat:
-    path: "{{ prepare_yum_base_repo }}"
-  register: base_repo
-
 - name: Replace Baserepo to {{ prepare_yum_mirror_url }}
   get_url:
     url: "{{ prepare_yum_mirror_base_repo }}"
     dest: "{{ prepare_yum_base_repo }}"
     mode: '0644'
-  when: not base_repo.stat.exists
-
-- name: Check epel repo exists
-  stat:
-    path: "{{ prepare_yum_epel_repo }}"
-  register: epel_repo
+    checksum: "{{ prepare_yum_mirror_base_repo_md5 }}"
 
 - name: Replace epel repo to {{ prepare_yum_mirror_url }}
   get_url:
     url: "{{ prepare_yum_mirror_epel_repo }}"
     dest: "{{ prepare_yum_epel_repo }}"
     mode: '0644'
-  when: not epel_repo.stat.exists
 
 - name: Register remote host repo files
   find:
