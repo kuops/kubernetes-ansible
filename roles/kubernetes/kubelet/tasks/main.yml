@@ -23,6 +23,8 @@
   template:
     src: kubeadm-flags.env.j2
     dest: "{{ kubelet_flags_env }}"
+  notify:
+  - restart kubelet
 
 - name: Create kubelet config file
   template:
