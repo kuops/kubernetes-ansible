@@ -15,7 +15,6 @@
   template:
     src: resolv.conf.j2
     dest: /etc/resolv.conf
-    backup: yes
 
 - name: Set timezone to Asia/Shanghai
   timezone:

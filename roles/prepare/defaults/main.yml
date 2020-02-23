@@ -3,6 +3,7 @@ prepare_yum_fastmirror_conf: "/etc/yum/pluginconf.d/fastestmirror.conf"
 prepare_yum_base_repo: "/etc/yum.repos.d/CentOS-Base.repo"
 prepare_yum_mirror_url: "mirrors.aliyun.com"
 prepare_yum_mirror_base_repo: "http://{{ prepare_yum_mirror_url }}/repo/Centos-7.repo"
+prepare_yum_mirror_base_repo_md5: "md5:13151789a512213f1695a5b427b1a9ab"
 prepare_yum_epel_repo: "/etc/yum.repos.d/epel.repo"
 prepare_yum_mirror_epel_repo: "http://{{ prepare_yum_mirror_url }}/repo/epel-7.repo"
 prepare_yum_remove_internal_url: yes

@@ -82,10 +82,26 @@
 
 - hosts: k8s_cluster
   become: yes
+  pre_tasks:
+  - name: Change default ipv4 address using eth1
+    add_ansible_default_route:
+      ifname: "{{ vagrant_ifname }}"
+      add: yes
+    when: is_vagrant_vm | bool
+  - name: Gather facts from ALL hosts (regardless of limit or tags)
+    setup:
+      gather_subset: '!all,!any,network'
+    delegate_to: "{{ item }}"
+    delegate_facts: yes
+    #when: hostvars[item]['ansible_default_ipv4'] is not defined
+    with_items: "{{ groups['kube_master'] }}"
+  - name: Set ansible_ansible_host_ip variables
+    set_fact:
+      ansible_host_ip: "{{ ansible_default_ipv4.address }}"
   roles:
   - kubernetes/kubelet
 
-- hosts: k8s_cluster
+- hosts: kube_master
   become: yes
   roles:
   - addons

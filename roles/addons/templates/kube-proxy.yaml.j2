@@ -29,7 +29,7 @@ data:
       contentType: ""
       kubeconfig: /var/lib/kube-proxy/kubeconfig.conf
       qps: 0
-    clusterCIDR: ""
+    clusterCIDR: {{ kubernetes_pod_network_cidr }}
     configSyncPeriod: 0s
     conntrack:
       maxPerCore: null

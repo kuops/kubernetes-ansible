@@ -4,38 +4,71 @@
     path: "{{ kubernetes_addons_dir }}"
     state: directory
 
-- name: Apply kube-proxy addons
+- name: Create kube-proxy addons yaml
   template:
     src: kube-proxy.yaml.j2
     dest: "{{ kubernetes_addons_dir }}/kube-proxy.yaml"
-  delegate_to: "{{ groups['kube_master'][0] }}"
   register: kube_proxy_addons
-  run_once: yes
 
 - name: Apply kube-proxy ds and rbac
   shell: |
     kubectl --kubeconfig={{ kubernetes_kubeconfig_admin_conf }} \
-    apply -f {{ kubernetes_addons_dir }}//kube-proxy.yaml
+    apply -f {{ kubernetes_addons_dir }}/kube-proxy.yaml
   environment:
     PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
   delegate_to: "{{ groups['kube_master'][0] }}"
   run_once: yes
   when: kube_proxy_addons.changed
 
-- name: Apply coredns addons
+- name: Create coredns addons yaml
   template:
     src: coredns.yaml.j2
     dest: "{{ kubernetes_addons_dir }}/coredns.yaml"
-  delegate_to: "{{ groups['kube_master'][0] }}"
   register: coredns_addons
-  run_once: yes
 
 - name: Apply coredns deployment and rbac
   shell: |
     kubectl --kubeconfig={{ kubernetes_kubeconfig_admin_conf }} \
-    apply -f {{ kubernetes_addons_dir }}//coredns.yaml
+    apply -f {{ kubernetes_addons_dir }}/coredns.yaml
   environment:
     PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
   delegate_to: "{{ groups['kube_master'][0] }}"
   run_once: yes
   when: coredns_addons.changed
+
+- name: Create calico addons yaml
+  template:
+    src: calico.yaml.j2
+    dest: "{{ kubernetes_addons_dir }}/calico.yaml"
+  register: calico_addons
+
+- name: Apply calico deployment and rbac
+  shell: |
+    kubectl --kubeconfig={{ kubernetes_kubeconfig_admin_conf }} \
+    apply -f {{ kubernetes_addons_dir }}/calico.yaml
+  environment:
+    PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
+  delegate_to: "{{ groups['kube_master'][0] }}"
+  run_once: yes
+  when: calico_addons.changed
+
+- name: Create calicoctl addons yaml
+  template:
+    src: calicoctl.yaml.j2
+    dest: "{{ kubernetes_addons_dir }}/calicoctl.yaml"
+  register: calicoctl_addons
+
+- name: Apply calicoctl deployment and rbac
+  shell: |
+    kubectl --kubeconfig={{ kubernetes_kubeconfig_admin_conf }} \
+    apply -f {{ kubernetes_addons_dir }}/calicoctl.yaml
+  environment:
+    PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
+  delegate_to: "{{ groups['kube_master'][0] }}"
+  run_once: yes
+  when: calicoctl_addons.changed
+
+- name: Update bashrc
+  template:
+    src: bashrc.j2
+    dest: "{{ ansible_env.HOME }}/.bashrc"

@@ -27,8 +27,3 @@
     src: daemon.json.j2
     dest: "{{ runtimes_docker_config_dir }}/daemon.json"
   notify: start docker
-
-- name: Install docker sdk for python
-  yum:
-    name: python-docker-py
-    state: present
