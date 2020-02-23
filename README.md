@@ -1,8 +1,11 @@
 # Kubernetes-Ansible
 
+[![Build Status](https://travis-ci.com/kuops/kubernetes-ansible.svg?branch=master)](https://travis-ci.com/kuops/kubernetes-ansible)
+
+<!-- markdownlint-disable MD013 -->
 This Repository is Using Ansible Deploy a Production high availability Kubernetes Cluster. Roles step Fllow the offical tools Kubeadm.
 
-## High availability 
+## High availability
 
 each node running a envoy loadbalancer on 127.0.0.1:8443 proxy the kube-apiserver serivce.
 
@@ -21,7 +24,7 @@ each node running a envoy loadbalancer on 127.0.0.1:8443 proxy the kube-apiserve
 
 If you want using vagrant up local cluster, do this:
 
-```
+```bash
 git clone https://github.com/kuops/kubernetes-ansible.git
 cd kubernetes-ansible
 vagrant up
@@ -36,7 +39,7 @@ Variables:
 ```bash
 # master node nummber, should be deployed with odd numbers
 export KUBE_MASTER_NUM=3
-# worker node number 
+# worker node number
 export KUBE_NODE_NUM=1
 # master node machine memory size
 export KUBE_MASTER_MEM=4096
@@ -64,7 +67,7 @@ make cert
 
 add your inventory on inventories directory, like `example` inventory:
 
-```
+```bash
 inventories/example
 ├── group_vars
 │   └── all.yml
