@@ -4,4 +4,5 @@ install:
   - curl -Lo /opt/ec-linux-amd64.tar.gz https://github.com/editorconfig-checker/editorconfig-checker/releases/download/2.0.3/ec-linux-amd64.tar.gz
   - tar xf /opt/ec-linux-amd64.tar.gz -C /opt
 script:
-  - /opt/bin/ec-linux-amd64 --help
+  - /opt/bin/ec-linux-amd64
+  - ansible-lint
