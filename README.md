@@ -57,7 +57,7 @@ export KUBE_NODE_NUM=1
 # master node machine memory size
 export KUBE_MASTER_MEM=4096
 # worker node machine memory size
-export KUBE_NODE_MEM=16384
+export KUBE_NODE_MEM=4096
 ```
 
 If running has some error, setting debug variables:
