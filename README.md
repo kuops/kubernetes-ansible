@@ -4,11 +4,22 @@
 [![Repo Size](https://img.shields.io/github/repo-size/kuops/kubernetes-ansible)](https://github.com/kuops/kubernetes-ansible)
 
 <!-- markdownlint-disable MD013 -->
-This Repository is Using Ansible Deploy a Production high availability Kubernetes Cluster. Roles step Fllow the offical tools Kubeadm.
+This Repository is Using Ansible Deploy a Binary High Availability Kubernetes Cluster. Roles step Fllow the offical deploy tools Kubeadm.
 
 ## High availability
 
 each node running a envoy loadbalancer on 127.0.0.1:8443 proxy the kube-apiserver serivce.
+
+## Calico
+
+calico disable ipip modules, in vagrant this settings require:
+
+```bash
+# calico node variables
+IP_AUTODETECTION_METHOD="skip-interface=eth0"
+# kubelet settings
+--node-ip=x.x.x.x
+```
 
 ## Dependencies
 
@@ -18,6 +29,7 @@ each node running a envoy loadbalancer on 127.0.0.1:8443 proxy the kube-apiserve
 - **VirtualBox**: 6.1.4
 - **Docker**: 19.03
 - **Kubernetes**: 1.17.3
+- **Calico**: 3.12.0
 
 ## Quick Start
 
@@ -59,14 +71,14 @@ export ANSIBLE_DEBUG=3
 
 ### Ansible
 
-generator ca cert and bootstrap token, you can run:
+Generator ca cert and bootstrap token, you can run:
 
 ```bash
 # generator cert at base directory in .cert
 make cert
 ```
 
-add your inventory on inventories directory, like `example` inventory:
+Add your inventory on inventories directory, like `example` inventory:
 
 ```bash
 inventories/example
@@ -75,7 +87,13 @@ inventories/example
 └── hosts
 ```
 
-run deploy:
+If you not use vagrant, `is_vagrant_vm` variables value set to `no`:
+
+```bash
+is_vagrant_vm: no
+```
+
+run deploy example:
 
 ```bash
 ansible-playbook -i inventories/example/hosts site.yml
