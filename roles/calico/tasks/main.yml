@@ -1,6 +1,6 @@
 ---
 - name: Check if host has NetworkManager
-  command: systemctl show NetworkManager
+  command: systemctl show NetworkManager # noqa 303
   register: nm_check
   failed_when: false
   changed_when: false
@@ -20,7 +20,7 @@
     dest: /etc/NetworkManager/conf.d/calico.conf
   when:
   - nm_check.rc == 0
-  notify: 
+  notify:
   - reload NetworkManager
 
 - name: Create calico addons yaml
