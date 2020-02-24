@@ -89,7 +89,7 @@ inventories/example
 
 If you not use vagrant, `is_vagrant_vm` variables value set to `no`:
 
-```bash
+```yaml
 is_vagrant_vm: no
 ```
 
