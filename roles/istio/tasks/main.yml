@@ -1,0 +1,13 @@
+---
+- name: Check istioctl exists
+  stat:
+    path: /usr/local/bin/istioctl
+  register: istioctl_cmd
+
+- name: Install istioctl
+  shell: |
+    docker pull boxboat/istioctl:1.4.5
+    docker run -dit --name istioctl --rm --entrypoint /bin/sh boxboat/istioctl:1.4.5
+    docker cp istioctl:/usr/local/bin/istioctl /usr/local/bin/istioctl
+    docker rm -f istioctl
+  when: not istioctl_cmd.stat.exists

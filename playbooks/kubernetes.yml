@@ -110,3 +110,8 @@
   become: yes
   roles:
   - calico
+
+- hosts: k8s_cluster
+  become: yes
+  roles:
+  - istio
