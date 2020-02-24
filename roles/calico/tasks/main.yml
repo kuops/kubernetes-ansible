@@ -23,6 +23,11 @@
   notify:
   - reload NetworkManager
 
+- name: Create kubernetes addons dir
+  file:
+    path: "{{ kubernetes_addons_dir }}"
+    state: directory
+
 - name: Create calico addons yaml
   template:
     src: calico.yaml.j2
