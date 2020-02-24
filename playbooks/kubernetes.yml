@@ -105,3 +105,8 @@
   become: yes
   roles:
   - addons
+
+- hosts: k8s_cluster
+  become: yes
+  roles:
+  - calico
