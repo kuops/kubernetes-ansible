@@ -1,0 +1,6 @@
+---
+- name: reload NetworkManager
+  service:
+    name: NetworkManager
+    state: reloaded
+  when: '"running" in nm_check.stdout'

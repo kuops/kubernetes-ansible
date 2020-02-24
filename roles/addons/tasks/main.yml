@@ -36,38 +36,6 @@
   run_once: yes
   when: coredns_addons.changed
 
-- name: Create calico addons yaml
-  template:
-    src: calico.yaml.j2
-    dest: "{{ kubernetes_addons_dir }}/calico.yaml"
-  register: calico_addons
-
-- name: Apply calico deployment and rbac
-  shell: |
-    kubectl --kubeconfig={{ kubernetes_kubeconfig_admin_conf }} \
-    apply -f {{ kubernetes_addons_dir }}/calico.yaml
-  environment:
-    PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
-  delegate_to: "{{ groups['kube_master'][0] }}"
-  run_once: yes
-  when: calico_addons.changed
-
-- name: Create calicoctl addons yaml
-  template:
-    src: calicoctl.yaml.j2
-    dest: "{{ kubernetes_addons_dir }}/calicoctl.yaml"
-  register: calicoctl_addons
-
-- name: Apply calicoctl deployment and rbac
-  shell: |
-    kubectl --kubeconfig={{ kubernetes_kubeconfig_admin_conf }} \
-    apply -f {{ kubernetes_addons_dir }}/calicoctl.yaml
-  environment:
-    PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
-  delegate_to: "{{ groups['kube_master'][0] }}"
-  run_once: yes
-  when: calicoctl_addons.changed
-
 - name: Update bashrc
   template:
     src: bashrc.j2

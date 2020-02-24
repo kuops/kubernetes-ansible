@@ -1,0 +1,53 @@
+---
+- name: Check if host has NetworkManager
+  command: systemctl show NetworkManager # noqa 303
+  register: nm_check
+  failed_when: false
+  changed_when: false
+
+- name: Ensure NetworkManager conf.d dir
+  file:
+    path: "/etc/NetworkManager/conf.d"
+    state: directory
+    recurse: yes
+  when: nm_check.rc == 0
+
+- name: Prevent NetworkManager from managing Calico interfaces
+  copy:
+    content: |
+      [keyfile]
+      unmanaged-devices=interface-name:cali*;interface-name:tunl*
+    dest: /etc/NetworkManager/conf.d/calico.conf
+  when:
+  - nm_check.rc == 0
+  notify:
+  - reload NetworkManager
+
+- name: Create calico addons yaml
+  template:
+    src: calico.yaml.j2
+    dest: "{{ kubernetes_addons_dir }}/calico.yaml"
+  register: calico_addons
+
+- name: Apply calico deployment and rbac
+  shell: |
+    kubectl --kubeconfig={{ kubernetes_kubeconfig_admin_conf }} \
+    apply -f {{ kubernetes_addons_dir }}/calico.yaml
+  environment:
+    PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
+  delegate_to: "{{ groups['kube_master'][0] }}"
+  run_once: yes
+  when: calico_addons.changed
+
+- name: Check calicoctl command exists
+  stat:
+    path: /usr/local/bin/calicoctl
+  register: calicoctl_cmd
+
+- name: install calicoctl command
+  shell: |
+    docker pull calico/ctl:v3.12.0
+    docker run -dit --name calicoctl --rm --entrypoint /bin/sh calico/ctl:v3.12.0
+    docker cp calicoctl:/calicoctl /usr/local/bin/calicoctl
+    docker rm -f calicoctl
+  when: not  calicoctl_cmd.stat.exists

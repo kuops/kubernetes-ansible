@@ -17,4 +17,4 @@ complete -F __start_kubectl k
 source <(kubectl completion bash)
 
 # Calicoctl alias
-alias calicoctl="kubectl exec -i -n kube-system calicoctl /calicoctl -- "
+alias calicoctl="DATASTORE_TYPE=kubernetes KUBECONFIG=~/.kube/config calicoctl"
