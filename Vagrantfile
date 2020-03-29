@@ -1,13 +1,79 @@
 # -*- mode: ruby -*-
 # vi: set ft=ruby :
 
-BOX_URL             = 'https://mirrors.nju.edu.cn/centos-cloud/centos/7/vagrant/x86_64/images/CentOS-7-x86_64-Vagrant-1910_01.VirtualBox.box'
-BOX                 = 'centos/7'
+require 'openssl'
+require 'fileutils'
+
 VAGRANT_DIR         = File.expand_path(File.dirname(__FILE__))
 LOCAL_CERT_DIR      = "#{VAGRANT_DIR}/.cert"
-LOCAL_BIN_DIR  = "#{VAGRANT_DIR}/.bin"
-KUBE_MASTER_NUM     = ENV["KUBE_MASTER_NUM"].to_i || 3
-KUBE_NODE_NUM       = ENV["KUBE_NODE_NUM"].to_i || 1
+LOCAL_BIN_DIR       = "#{VAGRANT_DIR}/.bin"
+
+if !Dir.exist?(LOCAL_CERT_DIR)
+  FileUtils.mkdir_p "#{LOCAL_CERT_DIR}"
+end
+
+if !Dir.exist?(LOCAL_BIN_DIR)
+  FileUtils.mkdir_p "#{LOCAL_BIN_DIR}"
+end
+
+def BootstrapToken()
+  pattern = [('a'..'z'),(0..9)].map(&:to_a).flatten
+  token_id = (0...6).map{ pattern[rand(pattern.length)] }.join
+  token_secret = (0...16).map{ pattern[rand(pattern.length)] }.join
+  File.open("#{LOCAL_CERT_DIR}/token.csv", "wb") { |f| f.print "%s.%s\n" % [token_id, token_secret] }
+end
+
+def CreateCaCert(key_path,cert_path,cn)
+  root_key = OpenSSL::PKey::RSA.new 2048 # the CA's public/private key
+  root_ca = OpenSSL::X509::Certificate.new
+  root_ca.version = 2 # cf. RFC 5280 - to make it a "v3" certificate
+  root_ca.serial = 0
+  root_ca.subject = OpenSSL::X509::Name.parse "CN=#{cn}"
+  root_ca.issuer = root_ca.subject # root CA's are "self-signed"
+  root_ca.public_key = root_key.public_key
+  root_ca.not_before = Time.now
+  root_ca.not_after = root_ca.not_before + 100 * 365 * 24 * 60 * 60 # 100 years validity
+  ef = OpenSSL::X509::ExtensionFactory.new
+  ef.subject_certificate = root_ca
+  ef.issuer_certificate = root_ca
+  root_ca.add_extension(ef.create_extension("keyUsage","digitalSignature,keyEncipherment,keyCertSign", true))
+  root_ca.add_extension(ef.create_extension("basicConstraints","CA:TRUE",true))
+  root_ca.sign(root_key, OpenSSL::Digest::SHA256.new)
+  File.open(key_path, "wb") { |f| f.print root_key.to_pem }
+  File.open(cert_path, "wb") { |f| f.print root_ca.to_pem }
+end
+
+def CreatePubkeyPair(sa_key_path,sa_pub_path)
+  sa_key = OpenSSL::PKey::RSA.new 2048
+  sa_pub = sa_key.public_key
+  File.open(sa_key_path, "wb") { |f| f.print sa_key.to_pem }
+  File.open(sa_pub_path, "wb") { |f| f.print sa_pub.to_pem }
+end
+
+if !File.exist?("#{LOCAL_CERT_DIR}/token.csv")
+  BootstrapToken()
+end
+
+if !File.exist?("#{LOCAL_CERT_DIR}/etcd_ca.crt")
+  CreateCaCert("#{LOCAL_CERT_DIR}/etcd_ca.key","#{LOCAL_CERT_DIR}/etcd_ca.crt","etcd-ca")
+end
+
+if !File.exist?("#{LOCAL_CERT_DIR}/kube_ca.crt")
+  CreateCaCert("#{LOCAL_CERT_DIR}/kube_ca.key","#{LOCAL_CERT_DIR}/kube_ca.crt","kubernetes")
+end
+
+if !File.exist?("#{LOCAL_CERT_DIR}/front-proxy-ca.crt")
+  CreateCaCert("#{LOCAL_CERT_DIR}/front-proxy-ca.key","#{LOCAL_CERT_DIR}/front-proxy-ca.crt","front-proxy-ca")
+end
+
+if !File.exist?("#{LOCAL_CERT_DIR}/sa.pub")
+  CreatePubkeyPair("#{LOCAL_CERT_DIR}/sa.key","#{LOCAL_CERT_DIR}/sa.pub")
+end
+
+BOX_URL             = 'https://mirrors.nju.edu.cn/centos-cloud/centos/7/vagrant/x86_64/images/CentOS-7-x86_64-Vagrant-1910_01.VirtualBox.box'
+BOX                 = 'centos/7'
+KUBE_MASTER_NUM     = ENV["KUBE_MASTER_NUM"] && ENV["KUBE_MASTER_NUM"].to_i || 1
+KUBE_NODE_NUM       = ENV["KUBE_NODE_NUM"] && ENV["KUBE_NODE_NUM"].to_i || 1
 KUBE_NODE_MEM       = ENV["KUBE_NODE_MEM"] || 4096
 KUBE_MASTER_MEM     = ENV["KUBE_MASTER_MEM"] || 4096
 ANSIBLE_VERBOSE     = "v" * ENV["ANSIBLE_DEBUG"].to_i
@@ -61,70 +127,7 @@ ANSIBLE_EXTRA_VARS  = {
                        "vagrant_ifname" => "eth1"
                       }
 
-require 'openssl'
-require 'fileutils'
 
-if !Dir.exist?(LOCAL_CERT_DIR)
-  FileUtils.mkdir_p "#{LOCAL_CERT_DIR}"
-end
-
-if !Dir.exist?(LOCAL_BIN_DIR)
-  FileUtils.mkdir_p "#{LOCAL_BIN_DIR}"
-end
-
-def CreateCaCert(key_path,cert_path,cn)
-  root_key = OpenSSL::PKey::RSA.new 2048 # the CA's public/private key
-  root_ca = OpenSSL::X509::Certificate.new
-  root_ca.version = 2 # cf. RFC 5280 - to make it a "v3" certificate
-  root_ca.serial = 0
-  root_ca.subject = OpenSSL::X509::Name.parse "CN=#{cn}"
-  root_ca.issuer = root_ca.subject # root CA's are "self-signed"
-  root_ca.public_key = root_key.public_key
-  root_ca.not_before = Time.now
-  root_ca.not_after = root_ca.not_before + 100 * 365 * 24 * 60 * 60 # 100 years validity
-  ef = OpenSSL::X509::ExtensionFactory.new
-  ef.subject_certificate = root_ca
-  ef.issuer_certificate = root_ca
-  root_ca.add_extension(ef.create_extension("keyUsage","digitalSignature,keyEncipherment,keyCertSign", true))
-  root_ca.add_extension(ef.create_extension("basicConstraints","CA:TRUE",true))
-  root_ca.sign(root_key, OpenSSL::Digest::SHA256.new)
-  File.open(key_path, "wb") { |f| f.print root_key.to_pem }
-  File.open(cert_path, "wb") { |f| f.print root_ca.to_pem }
-end
-
-def CreatePubkeyPair(sa_key_path,sa_pub_path)
-  sa_key = OpenSSL::PKey::RSA.new 2048
-  sa_pub = sa_key.public_key
-  File.open(sa_key_path, "wb") { |f| f.print sa_key.to_pem }
-  File.open(sa_pub_path, "wb") { |f| f.print sa_pub.to_pem }
-end
-
-if !File.exist?("#{LOCAL_CERT_DIR}/etcd_ca.crt")
-  CreateCaCert("#{LOCAL_CERT_DIR}/etcd_ca.key","#{LOCAL_CERT_DIR}/etcd_ca.crt","etcd-ca")
-end
-
-if !File.exist?("#{LOCAL_CERT_DIR}/kube_ca.crt")
-  CreateCaCert("#{LOCAL_CERT_DIR}/kube_ca.key","#{LOCAL_CERT_DIR}/kube_ca.crt","kubernetes")
-end
-
-if !File.exist?("#{LOCAL_CERT_DIR}/front-proxy-ca.crt")
-  CreateCaCert("#{LOCAL_CERT_DIR}/front-proxy-ca.key","#{LOCAL_CERT_DIR}/front-proxy-ca.crt","front-proxy-ca")
-end
-
-if !File.exist?("#{LOCAL_CERT_DIR}/sa.pub")
-  CreatePubkeyPair("#{LOCAL_CERT_DIR}/sa.key","#{LOCAL_CERT_DIR}/sa.pub")
-end
-
-def BootstrapToken()
-  pattern = [('a'..'z'),(0..9)].map(&:to_a).flatten
-  token_id = (0...6).map{ pattern[rand(pattern.length)] }.join
-  token_secret = (0...16).map{ pattern[rand(pattern.length)] }.join
-  File.open("#{LOCAL_CERT_DIR}/token.csv", "wb") { |f| f.print "%s.%s\n" % [token_id, token_secret] }
-end
-
-if !File.exist?("#{LOCAL_CERT_DIR}/token.csv")
-  BootstrapToken()
-end
 
 Vagrant.require_version ">= 2.2.6"
 
