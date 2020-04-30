@@ -10,6 +10,25 @@ This Repository is Using Ansible Deploy a Binary High Availability Kubernetes Cl
 
 each node running a envoy loadbalancer on 127.0.0.1:8443 proxy the kube-apiserver serivce.
 
+```bash
+                                            upstream    +-------------------+
+                           +--------------------------> | kube-master1:6443 |
+                           |                            +-------------------+
+                           |
+                           |
+                           |
++-----------+  request   +----------------+  upstream   +-------------------+
+| kube-node | ---------> | 127.0.0.1:8443 | ----------> | kube-master2:6443 |
++-----------+            +----------------+             +-------------------+
+                           |
+                           |
+                           |
+                           |                upstream    +-------------------+
+                           +--------------------------> | kube-master3:6443 |
+                                                        +-------------------+
+
+```
+
 ## Calico
 
 calico disable ipip modules, in vagrant this settings require:
