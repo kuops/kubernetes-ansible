@@ -87,7 +87,7 @@ spec:
       - args:
         - -conf
         - /etc/coredns/Corefile
-        image: gcr.azk8s.cn/google_containers/coredns:1.6.5
+        image: {{ kubernetes_image_repo }}/coredns:1.6.5
         imagePullPolicy: IfNotPresent
         livenessProbe:
           failureThreshold: 5
