@@ -5,8 +5,8 @@ rumtimes_docker_apps:
 runtimes_docker_data_root: "{{ docker_storage_dir }}"
 runtimes_docker_config_dir: "/etc/docker"
 runtimes_docker_registry_mirrors: 
-- "https://dockerhub.azk8s.cn"
-- "https://docker.mirrors.ustc.edu.cn"
+- "https://hub-mirror.c.163.com"
+- "https://hub.mirror.aliyuncs.com"
 runtimes_docker_log_driver: json-file
 runtimes_docker_log_opts: 
   max-size: 100m

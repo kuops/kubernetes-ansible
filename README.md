@@ -24,11 +24,11 @@ IP_AUTODETECTION_METHOD="skip-interface=eth0"
 ## Dependencies
 
 - **Linux Distribution**: CentOS/7
-- **Ansible**: 2.9.4
+- **Ansible**: 2.9.7
 - **Vagrant**: 2.2.7
-- **VirtualBox**: 6.1.4
+- **VirtualBox**: 6.1.6
 - **Docker**: 19.03
-- **Kubernetes**: 1.17.3
+- **Kubernetes**: 1.17.5
 - **Calico**: 3.12.0
 
 ## Quick Start
