@@ -35,6 +35,8 @@
   template:
     src: config.yaml.j2
     dest: "{{ kubelet_config_yaml }}"
+  notify:
+  - restart kubelet
 
 - name: Create kubelet drop-in 10-admin.conf
   template:
