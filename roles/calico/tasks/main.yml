@@ -51,7 +51,7 @@
 
 - name: install calicoctl command
   shell: |
-    docker pull calico/ctl:v3.12.0
+    docker pull calico/ctl:v3.14.0
     docker run -dit --name calicoctl --rm --entrypoint /bin/sh calico/ctl:v3.12.0
     docker cp calicoctl:/calicoctl /usr/local/bin/calicoctl
     docker rm -f calicoctl

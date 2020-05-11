@@ -8,7 +8,7 @@ etcd_certs_dir: "/etc/kubernetes/pki/etcd"
 etcd_ca_cert: "/etc/kubernetes/pki/etcd/ca.crt"
 etcd_ca_key: "/etc/kubernetes/pki/etcd/ca.key"
 # kubernetes
-kubernetes_version: "1.17.5"
+kubernetes_version: "1.18.2"
 kubernetes_conf_dir: "/etc/kubernetes"
 kubernetes_certs_dir: "/etc/kubernetes/pki"
 kubernetes_ca_key: "/etc/kubernetes/pki/ca.key"

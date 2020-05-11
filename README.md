@@ -47,7 +47,7 @@ IP_AUTODETECTION_METHOD="skip-interface=eth0"
 - **Vagrant**: 2.2.7
 - **VirtualBox**: 6.1.6
 - **Docker**: 19.03
-- **Kubernetes**: 1.17.5
+- **Kubernetes**: 1.18.2
 - **Calico**: 3.12.0
 
 ## Quick Start

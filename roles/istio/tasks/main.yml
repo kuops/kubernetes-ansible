@@ -6,8 +6,8 @@
 
 - name: Install istioctl
   shell: |
-    docker pull boxboat/istioctl:1.4.5
-    docker run -dit --name istioctl --rm --entrypoint /bin/sh boxboat/istioctl:1.4.5
+    docker pull istio/istioctl:1.5.2
+    docker run -dit --name istioctl --rm --entrypoint /bin/sh istio/istioctl:1.5.2
     docker cp istioctl:/usr/local/bin/istioctl /usr/local/bin/istioctl
     docker rm -f istioctl
   when: not istioctl_cmd.stat.exists
