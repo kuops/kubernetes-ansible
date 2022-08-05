@@ -8,8 +8,14 @@
     option: dns
     value: none
     backup: yes
-  notify:
-    - reload NetworkManager
+  register: networkmanager_conf
+
+- name: Reload NetworkManager
+  systemd:
+    state: reloaded
+    daemon_reload: yes
+    name: NetworkManager
+  when: networkmanager_conf.changed
 
 - name: Change resolv.conf
   template:

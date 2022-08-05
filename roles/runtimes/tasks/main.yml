@@ -1,2 +1,3 @@
 ---
-- include: runtimes_docker.yml
+- include_tasks: runtimes_containerd.yml
+  when: kubernetes_runtime == "containerd"

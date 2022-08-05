@@ -14,3 +14,8 @@ runtimes_docker_log_opts:
 runtimes_docker_storage_driver: overlay2
 runtimes_docker_storage_opts: 
 - "overlay2.override_kernel_check=true"
+rumtimes_containerd_apps:
+- "containerd.io-{{ containerd_version }}"
+- "cri-tools"
+runtimes_containerd_config_dir: "/etc/containerd"
+

@@ -1,0 +1,12 @@
+box: centos/7
+box_url:  https://mirrors.ustc.edu.cn/centos-cloud/centos/7/vagrant/x86_64/images/CentOS-7-x86_64-Vagrant-2004_01.VirtualBox.box
+master:
+  prefix: kube-master
+  number: 3
+  cpu: 2
+  memory: 4096
+worker:
+  prefix: kube-worker
+  number: 2
+  cpu: 1
+  memory: 2048

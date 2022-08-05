@@ -1,8 +1,8 @@
 ---
-- include: disable_selinux.yml
-- include: disable_swap.yml
-- include: change_repo.yml
-- include: change_settings.yml
-- include: install_app.yml
-- include: tuning_system.yml
-- include: upgrade_kernel.yml
+- include_tasks: disable_selinux.yml
+- include_tasks: disable_swap.yml
+- include_tasks: change_repo.yml
+- include_tasks: change_settings.yml
+- include_tasks: install_app.yml
+- include_tasks: tuning_system.yml
+- include_tasks: upgrade_kernel.yml

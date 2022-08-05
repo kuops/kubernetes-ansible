@@ -5,6 +5,7 @@
     etcd_download_url: "{{ etcd_google_url }}/v{{ etcd_version }}/etcd-v{{ etcd_version }}-linux-amd64.tar.gz"
     kubernetes_google_url: "https://storage.googleapis.com/kubernetes-release/release"
     kubernetes_download_url: "{{ kubernetes_google_url }}/v{{ kubernetes_version }}/kubernetes-server-linux-amd64.tar.gz"
+    kubernetes_checksum: "{{ kubernetes_download_url }}.sha256"
   tasks:
   - name: Downloading etcd offcial {{ etcd_version }}
     get_url:

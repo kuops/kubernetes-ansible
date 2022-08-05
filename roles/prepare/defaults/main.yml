@@ -1,18 +1,5 @@
 ---
-prepare_yum_fastmirror_conf: "/etc/yum/pluginconf.d/fastestmirror.conf"
-prepare_yum_base_repo: "/etc/yum.repos.d/CentOS-Base.repo"
-prepare_yum_mirror_url: "mirrors.aliyun.com"
-prepare_yum_mirror_base_repo: "https://{{ prepare_yum_mirror_url }}/repo/Centos-7.repo"
-prepare_yum_mirror_base_repo_md5: "md5:13151789a512213f1695a5b427b1a9ab"
-prepare_yum_epel_repo: "/etc/yum.repos.d/epel.repo"
-prepare_yum_mirror_epel_repo: "https://{{ prepare_yum_mirror_url }}/repo/epel-7.repo"
-prepare_yum_remove_internal_url: yes
-prepare_yum_internal_pattern: "aliyuncs"
-prepare_yum_elrepo_baseurl: "https://mirrors.tuna.tsinghua.edu.cn/elrepo/kernel/el7/$basearch/"
-prepare_yum_docker_repo_baseurl: "https://mirrors.aliyun.com/docker-ce/linux/centos/7/$basearch/stable"
-prepare_yum_docker_repo_gpgkey: "https://mirrors.aliyun.com/docker-ce/linux/centos/gpg"
-prepare_yum_kube_repo_baseurl: "https://mirrors.aliyun.com/kubernetes/yum/repos/kubernetes-el7-x86_64/"
-prepare_yum_kube_repo_gpgkey:  "https://mirrors.aliyun.com/kubernetes/yum/doc/yum-key.gpg https://mirrors.aliyun.com/kubernetes/yum/doc/rpm-package-key.gpg"
+prepare_yum_mirror_host: "mirrors.ustc.edu.cn"
 prepare_common_app:
 - tcpdump
 - bind-utils

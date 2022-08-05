@@ -22,5 +22,5 @@ indent_size = 4
 
 [Vagrantfile]
 indent_style = space
-indent_size = 2
+indent_size = 4
 language = ruby

@@ -45,8 +45,3 @@ local_front_proxy_ca_cert: "{{ local_certs_dir }}/front-proxy-ca.crt"
 local_sa_key: "{{ local_certs_dir }}/sa.key"
 local_sa_pub: "{{ local_certs_dir }}/sa.pub"
 local_token_csv: "{{ local_certs_dir }}/token.csv"
-# only use on ansible-playbook commmandline execute
-local_bin_dir: "{{ inventory_dir| regex_replace('inventories.*$','.bin') }}"
-local_certs_dir: "{{ inventory_dir| regex_replace('inventories.*$','.certs') }}"
-is_vagrant: yes
-vagrant_network_interface: eth1

@@ -50,7 +50,7 @@ def run_module():
     )
 
     module_args = dict(
-        ifname=dict(type='str', required=True),
+        interface=dict(type='str', required=True),
         add=dict(type='bool', required=False, default=True)
     )
 
@@ -62,7 +62,7 @@ def run_module():
     if module.check_mode:
         module.exit_json(**result)
 
-    dr = AnsibleDefaultRoute(module.params['ifname'])
+    dr = AnsibleDefaultRoute(module.params['interface'])
     if module_args['add']:
         if not dr.check_default_route():
             add_result, add_msg = dr.add_default_route()

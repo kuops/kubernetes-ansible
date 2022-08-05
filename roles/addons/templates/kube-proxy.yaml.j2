@@ -67,7 +67,7 @@ data:
     clusters:
     - cluster:
         certificate-authority: /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
-        server: https://10.7.0.101:6443
+        server: {{ kubernetes_apiserver_lb_url }}
       name: default
     contexts:
     - context:
@@ -132,7 +132,7 @@ spec:
       dnsPolicy: ClusterFirst
       hostNetwork: true
       nodeSelector:
-        beta.kubernetes.io/os: linux
+        kubernetes.io/os: linux
       priorityClassName: system-node-critical
       restartPolicy: Always
       schedulerName: default-scheduler
