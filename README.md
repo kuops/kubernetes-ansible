@@ -130,6 +130,13 @@ is_vagrant: no
 # vagrant_network_interface: eth1
 ```
 
+`local_bin_dir` and `local_certs_dir` in ansible-playbook diffrence `vagrantfile`:
+
+```yaml
+local_bin_dir: "{{ inventory_dir| regex_replace('inventories.*$','.bin') }}"
+local_certs_dir: "{{ inventory_dir| regex_replace('inventories.*$','.certs') }}"
+```
+
 run deploy example:
 
 ```bash
