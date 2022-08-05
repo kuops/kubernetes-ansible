@@ -10,6 +10,16 @@
     dest: "{{ kubernetes_addons_dir }}/kube-proxy.yaml"
   register: kube_proxy_addons
 
+- name: Check kube-proxy addons exists
+  shell: |
+    kubectl get ds -n kube-system kube-proxy
+  environment:
+    PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
+  delegate_to: "{{ groups['kube_master'][0] }}"
+  ignore_errors: yes
+  changed_when: False
+  register: get_kube_proxy
+
 - name: Apply kube-proxy ds and rbac
   shell: |
     kubectl --kubeconfig={{ kubernetes_kubeconfig_admin_conf }} \
@@ -18,13 +28,23 @@
     PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
   delegate_to: "{{ groups['kube_master'][0] }}"
   run_once: yes
-  when: kube_proxy_addons.changed
+  when: kube_proxy_addons.changed or 'not found' in get_kube_proxy.stderr
 
 - name: Create coredns addons yaml
   template:
     src: coredns.yaml.j2
     dest: "{{ kubernetes_addons_dir }}/coredns.yaml"
   register: coredns_addons
+
+- name: Check coredns addons exists
+  shell: |
+    kubectl get deploy -n kube-system coredns
+  environment:
+    PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
+  delegate_to: "{{ groups['kube_master'][0] }}"
+  ignore_errors: yes
+  changed_when: False
+  register: get_coredns 
 
 - name: Apply coredns deployment and rbac
   shell: |
@@ -34,7 +54,7 @@
     PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
   delegate_to: "{{ groups['kube_master'][0] }}"
   run_once: yes
-  when: coredns_addons.changed
+  when: coredns_addons.changed or 'not found' in get_coredns.stderr
 
 - name: Update bashrc
   template:

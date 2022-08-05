@@ -1,58 +1,78 @@
 ---
 - name: Disable fastmirrors
   lineinfile:
-    path: "{{ prepare_yum_fastmirror_conf }}"
+    path: "/etc/yum/pluginconf.d/fastestmirror.conf"
     regexp: '^enabled=1'
     line: enabled=0
 
-- name: Replace Baserepo to {{ prepare_yum_mirror_url }}
-  get_url:
-    url: "{{ prepare_yum_mirror_base_repo }}"
-    dest: "{{ prepare_yum_base_repo }}"
-    mode: '0644'
-    checksum: "{{ prepare_yum_mirror_base_repo_md5 }}"
-
-- name: Replace epel repo to {{ prepare_yum_mirror_url }}
-  get_url:
-    url: "{{ prepare_yum_mirror_epel_repo }}"
-    dest: "{{ prepare_yum_epel_repo }}"
-    mode: '0644'
-
-- name: Register remote host repo files
-  find:
-    patterns: '*.repo'
-    paths: /etc/yum.repos.d/
-    recurse: yes
-  register: find_repo
-  when: prepare_yum_remove_internal_url
-
-- name: Remove internalurl aliyuncs on repo files
+- name: Disable ipv6
   lineinfile:
-    path: "{{ item.path }}"
-    regexp: "{{ prepare_yum_internal_pattern }}"
-    state: absent
-  with_items: "{{ find_repo.files }}"
-  when: prepare_yum_remove_internal_url
+    path: "/etc/yum.conf"
+    regexp: '^ip_resolve=.*'
+    insertafter: '^plugin'
+    line: ip_resolve=4
+    state: present
 
-- name: Install ELRepo
+- name: Update Base repo to mirror
+  yum_repository:
+    name: base
+    description: CentOS-$releasever - Base
+    baseurl: "http://{{ prepare_yum_mirror_host }}/centos/$releasever/os/$basearch/"
+    gpgcheck: no
+    file: CentOS-Base
+
+- name: Update Updates repo to mirror
+  yum_repository:
+    name: updates
+    description: CentOS-$releasever - Updates
+    baseurl: "http://{{ prepare_yum_mirror_host }}/centos/$releasever/updates/$basearch/"
+    gpgcheck: no
+    file: CentOS-Base
+
+- name: Update Extras repo to mirror
+  yum_repository:
+    name: extras
+    description: CentOS-$releasever - Extras
+    baseurl: "http://{{ prepare_yum_mirror_host }}/centos/$releasever/extras/$basearch/"
+    gpgcheck: no
+    file: CentOS-Base
+
+- name: Add epel repo to mirror
+  yum_repository:
+    name: epel
+    description: Extra Packages for Enterprise Linux 7 - $basearch
+    baseurl: "http://{{ prepare_yum_mirror_host }}/epel/$releasever/$basearch/"
+    gpgcheck: no
+    file: epel
+
+- name: Add ELRepo Kernel to mirror
   yum_repository:
     name: elrepo-kernel
     description: ELRepo.org Community Enterprise Linux Kernel Repository – el7
-    baseurl: "{{ prepare_yum_elrepo_baseurl }}"
+    baseurl: "https://{{ prepare_yum_mirror_host }}/elrepo/kernel/el$releasever/$basearch/"
     gpgcheck: no
+    file: elrepo-kernel.repo
 
-- name:  Install docker repo
+- name:  Add docker repo
   yum_repository:
     name: docker-ce-stable
     description: Docker CE Stable - $basearch
-    baseurl: "{{ prepare_yum_docker_repo_baseurl }}"
-    gpgcheck: yes
-    gpgkey: "{{ prepare_yum_docker_repo_gpgkey }}"
+    baseurl: "https://{{ prepare_yum_mirror_host }}/docker-ce/linux/centos/$releasever/$basearch/stable"
+    gpgcheck: no
+    file: docker-ce
 
-- name:  Install kubernetes repo
+- name:  Add kubernetes repo
   yum_repository:
     name: kubernetes
     description: Kubernetes
-    baseurl: "{{ prepare_yum_kube_repo_baseurl }}"
-    gpgcheck: yes
-    gpgkey: "{{ prepare_yum_kube_repo_gpgkey }}"
+    baseurl: "https://{{ prepare_yum_mirror_host }}/kubernetes/yum/repos/kubernetes-el$releasever-$basearch/"
+    gpgcheck: no
+    file: kubernetes
+
+- name:  Add envoy repo
+  yum_repository:
+    name: tetrate-getenvoy-rpm-stable
+    description: Envoy
+    baseurl: "https://rpm.dl.getenvoy.io/public/rpm/el/$releasever/$basearch"
+    gpgcheck: no
+    file: envoy

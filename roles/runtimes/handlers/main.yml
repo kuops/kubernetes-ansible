@@ -5,3 +5,10 @@
     daemon_reload: yes
     name: docker
     enabled: yes
+
+- name: start containerd
+  systemd:
+    state: started
+    daemon_reload: yes
+    name: containerd
+    enabled: yes

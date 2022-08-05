@@ -30,29 +30,27 @@
 
 - name: Create calico addons yaml
   template:
-    src: calico.yaml.j2
-    dest: "{{ kubernetes_addons_dir }}/calico.yaml"
+    src: calico-typha.yaml.j2
+    dest: "{{ kubernetes_addons_dir }}/calico-typha.yaml"
+  delegate_to: "{{ groups['kube_master'][0] }}"
   register: calico_addons
+
+- name: Check calico-typha addons exists
+  shell: |
+    kubectl get deploy -n kube-system calico-typha
+  environment:
+    PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
+  delegate_to: "{{ groups['kube_master'][0] }}"
+  ignore_errors: yes
+  changed_when: False
+  register: get_calico
 
 - name: Apply calico deployment and rbac
   shell: |
     kubectl --kubeconfig={{ kubernetes_kubeconfig_admin_conf }} \
-    apply -f {{ kubernetes_addons_dir }}/calico.yaml
+    apply -f {{ kubernetes_addons_dir }}/calico-typha.yaml
   environment:
     PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
   delegate_to: "{{ groups['kube_master'][0] }}"
   run_once: yes
-  when: calico_addons.changed
-
-- name: Check calicoctl command exists
-  stat:
-    path: /usr/local/bin/calicoctl
-  register: calicoctl_cmd
-
-- name: install calicoctl command
-  shell: |
-    docker pull calico/ctl:v3.12.0
-    docker run -dit --name calicoctl --rm --entrypoint /bin/sh calico/ctl:v3.12.0
-    docker cp calicoctl:/calicoctl /usr/local/bin/calicoctl
-    docker rm -f calicoctl
-  when: not  calicoctl_cmd.stat.exists
+  when: calico_addons.changed or 'not found' in get_calico.stderr

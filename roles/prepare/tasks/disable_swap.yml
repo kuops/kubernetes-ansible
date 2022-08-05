@@ -5,8 +5,8 @@
     fstype: swap
     state: absent
   with_items:
-    - swap
-    - none
+  - swap
+  - none
 
 - name: Register swap status
   command: /sbin/swapon -s

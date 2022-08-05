@@ -1,6 +1,6 @@
 ---
-- include: master_install.yml
-- include: master_certs.yml
-- include: master_kubeconfig.yml
-- include: master_systemd.yml
-- include: master_bootstrap.yml
+- include_tasks: master_install.yml
+- include_tasks: master_certs.yml
+- include_tasks: master_kubeconfig.yml
+- include_tasks: master_systemd.yml
+- include_tasks: master_bootstrap.yml

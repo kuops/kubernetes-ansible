@@ -4,7 +4,6 @@
   roles:
   - prepare
 
-# prepare handler need reboot system
 - hosts: all
   become: yes
   roles:
@@ -13,92 +12,67 @@
 - hosts: etcd
   become: yes
   pre_tasks:
-  - name: Change default ipv4 address using eth1
-    add_ansible_default_route:
-      ifname: "{{ vagrant_ifname }}"
+  - name: Change default ipv4 address using {{ vagrant_network_interface }}
+    set_default_route:
+      interface: "{{ vagrant_network_interface }}"
       add: yes
-    when: is_vagrant_vm | bool
+    when: is_vagrant | bool
   - name: Gather facts from ALL hosts (regardless of limit or tags)
     setup:
       gather_subset: '!all,!any,network'
     delegate_to: "{{ item }}"
     delegate_facts: yes
-    #when: hostvars[item]['ansible_default_ipv4'] is not defined
     with_items: "{{ groups['etcd'] }}"
-  - name: Set ansible_ansible_host_ip variables
+  - name: Set ansible_host_ip variables
     set_fact:
       ansible_host_ip: "{{ ansible_default_ipv4.address }}"
   roles:
   - openssl
   - etcd
 
-- hosts: k8s_cluster
-  become: yes
-  pre_tasks:
-  - name: Change default ipv4 address using eth1
-    add_ansible_default_route:
-      ifname: "{{ vagrant_ifname }}"
-      add: yes
-    when: is_vagrant_vm | bool
-  - name: Gather facts from ALL hosts (regardless of limit or tags)
-    setup:
-      gather_subset: '!all,!any,network'
-    delegate_to: "{{ item }}"
-    delegate_facts: yes
-    #when: hostvars[item]['ansible_default_ipv4'] is not defined
-    with_items: "{{ groups['etcd'] }}"
-  - name: Set ansible_ansible_host_ip variables
-    set_fact:
-      ansible_host_ip: "{{ ansible_default_ipv4.address }}"
-  roles:
-  - loadbalancer
-
 - hosts: kube_master
   become: yes
   pre_tasks:
-  - name: Change default ipv4 address using eth1
-    add_ansible_default_route:
-      ifname: "{{ vagrant_ifname }}"
+  - name: Change default ipv4 address using {{ vagrant_network_interface }}
+    set_default_route:
+      interface: "{{ vagrant_network_interface }}"
       add: yes
-    when: is_vagrant_vm | bool
+    when: is_vagrant | bool
   - name: Gather facts from ALL hosts (regardless of limit or tags)
     setup:
       gather_subset: '!all,!any,network'
     delegate_to: "{{ item }}"
     delegate_facts: yes
-    #when: hostvars[item]['ansible_default_ipv4'] is not defined
     with_items: "{{ groups['kube_master'] }}"
-  - name: Set ansible_ansible_host_ip variables
+  - name: Set ansible_host_ip variables
     set_fact:
       ansible_host_ip: "{{ ansible_default_ipv4.address }}"
   roles:
   - openssl
+  - loadbalancer
   - kubernetes/master
+  - kubernetes/kubelet
 
-- hosts: kube_node
-  become: yes
-  roles:
-  - kubernetes/node
-
-- hosts: k8s_cluster
+- hosts: kube_worker
   become: yes
   pre_tasks:
-  - name: Change default ipv4 address using eth1
-    add_ansible_default_route:
-      ifname: "{{ vagrant_ifname }}"
+  - name: Change default ipv4 address using {{ vagrant_network_interface }}
+    set_default_route:
+      interface: "{{ vagrant_network_interface }}"
       add: yes
-    when: is_vagrant_vm | bool
+    when: is_vagrant | bool
   - name: Gather facts from ALL hosts (regardless of limit or tags)
     setup:
       gather_subset: '!all,!any,network'
     delegate_to: "{{ item }}"
     delegate_facts: yes
-    #when: hostvars[item]['ansible_default_ipv4'] is not defined
     with_items: "{{ groups['kube_master'] }}"
-  - name: Set ansible_ansible_host_ip variables
+  - name: Set ansible_host_ip variables
     set_fact:
       ansible_host_ip: "{{ ansible_default_ipv4.address }}"
   roles:
+  - loadbalancer
+  - kubernetes/worker
   - kubernetes/kubelet
 
 - hosts: kube_master
@@ -106,12 +80,7 @@
   roles:
   - addons
 
-- hosts: k8s_cluster
+- hosts: all
   become: yes
   roles:
   - calico
-
-- hosts: k8s_cluster
-  become: yes
-  roles:
-  - istio

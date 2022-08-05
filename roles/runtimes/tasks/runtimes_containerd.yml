@@ -1,0 +1,31 @@
+---
+- name: Install Containerd
+  yum:
+    name: "{{ rumtimes_containerd_apps }}"
+    state: present
+
+- name: Create Directory {{ containerd_stoage_dir }}
+  file:
+    path: "{{ containerd_stoage_dir }}"
+    state: directory
+
+- name: Create Directory {{ containerd_run_dir }}
+  file:
+    path: "{{ containerd_run_dir }}"
+    state: directory
+
+- name: Create Directory {{ runtimes_containerd_config_dir }}
+  file:
+    path: "{{ runtimes_containerd_config_dir }}"
+    state: directory
+
+- name: Setting Containerd config.toml
+  template:
+    src: config.toml.j2
+    dest: "{{ runtimes_containerd_config_dir }}/config.toml"
+  notify: start containerd
+
+- name: Setting crictl
+  template:
+    src: crictl.yaml.j2
+    dest: "/etc/crictl.yaml"

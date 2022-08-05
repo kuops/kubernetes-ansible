@@ -1,0 +1,2 @@
+---
+kubernetes_kubeconfig_admin_conf: "{{ kubernetes_conf_dir }}/admin.conf"

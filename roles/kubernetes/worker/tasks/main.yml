@@ -1,0 +1,4 @@
+---
+- include_tasks: worker_install.yml
+- include_tasks: worker_certs.yml
+

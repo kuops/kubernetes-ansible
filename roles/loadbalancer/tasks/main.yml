@@ -1,2 +1,2 @@
 ---
-- include: lb_envoy.yml
+- include_tasks: lb_envoy.yml

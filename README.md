@@ -1,6 +1,5 @@
 # Kubernetes-Ansible
 
-[![Build Status](https://travis-ci.com/kuops/kubernetes-ansible.svg?branch=master)](https://travis-ci.com/kuops/kubernetes-ansible)
 [![Repo Size](https://img.shields.io/github/repo-size/kuops/kubernetes-ansible)](https://github.com/kuops/kubernetes-ansible)
 
 <!-- markdownlint-disable MD013 -->
@@ -29,32 +28,49 @@ each node running a envoy loadbalancer on 127.0.0.1:8443 proxy the kube-apiserve
 
 ```
 
+## VirtualBox Network
+
+If virtualbox > 2.2.18 /etc/vbox/networks.conf
+
+```bash
+* 10.0.0.0/8 192.168.0.0/16 172.16.0.0/12
+```
+
 ## Calico
 
 calico disable ipip modules, in vagrant this settings require:
 
 ```bash
-# calico node variables
+# change calico.yaml variable
 IP_AUTODETECTION_METHOD="skip-interface=eth0"
-# kubelet settings
---node-ip=x.x.x.x
+CALICO_IPV4POOL_IPIP="Never"
+CALICO_IPV4POOL_CIDR="{{ kubernetes_pod_network_cidr }}"
+# kubelet 10-kubeadm.conf add --node-ip
+--node-ip="{{ ansible_host_ip }}"
 ```
 
 ## Dependencies
 
+On Host machine:
+
+- **OS**: macOS Monterey
+- **Vagrant**: 2.2.19
+- **VirtualBox**: 6.1.36
+- **Ansible**: 2.13.0
+
+On Guest machine:
+
 - **Linux Distribution**: CentOS/7
-- **Ansible**: 2.9.7
-- **Vagrant**: 2.2.7
-- **VirtualBox**: 6.1.6
-- **Docker**: 19.03
-- **Kubernetes**: 1.17.5
-- **Calico**: 3.12.0
+- **Containerd**: 1.6.6
+- **Critools**: 1.24.2
+- **Kubernetes**: 1.24.3
+- **Calico**: 3.23.3
 
 ## Quick Start
 
 ### Vagrant
 
-If you want using vagrant up local cluster, do this:
+Clone this repository, then use vagrant create kubernetes cluster:
 
 ```bash
 git clone https://github.com/kuops/kubernetes-ansible.git
@@ -62,30 +78,30 @@ cd kubernetes-ansible
 vagrant up
 ```
 
-Custom variables change defaults values of cluster in Vagrant.
-
-> this variables export before in `vagrant up`.
-
-Variables:
+Default config in `vagrant.yaml`, this config load before `vagrant up`:
 
 ```bash
-# master node nummber, should be deployed with odd numbers
-export KUBE_MASTER_NUM=3
-# worker node number
-export KUBE_NODE_NUM=1
-# master node machine memory size
-export KUBE_MASTER_MEM=4096
-# worker node machine memory size
-export KUBE_NODE_MEM=4096
+box: centos/7
+box_url:  https://mirrors.ustc.edu.cn/centos-cloud/centos/7/vagrant/x86_64/images/CentOS-7-x86_64-Vagrant-2004_01.VirtualBox.box
+master:
+  prefix: kube-master
+  number: 3
+  cpu: 2
+  memory: 4096
+worker:
+  prefix: kube-worker
+  number: 2
+  cpu: 1
+  memory: 2048
 ```
 
-If running has some error, setting debug variables:
+If has some ansible error, setting debug variables:
 
-> then you can try `vagrant provision` continue running ansible.
+then you can try `vagrant provision` or `vagrant up --provision` continue running ansible.
 
 ```bash
 # ansbile verbose level 0-4
-export ANSIBLE_DEBUG=3
+ANSIBLE_DEBUG=2 vagrant up --provision
 ```
 
 ### Ansible
@@ -106,10 +122,12 @@ inventories/example
 └── hosts
 ```
 
-If you not use vagrant, `is_vagrant_vm` variables value set to `no`:
+`is_vagrant` variable add a route `8.8.8.8 dev eth1 scope link` change `ansible_default_ipv4` value to `vagrant_network_interface` ip address, if not use vagrant, change to `no`:
 
 ```yaml
-is_vagrant_vm: no
+is_vagrant: no
+# comment vagrant_network_interface variable
+# vagrant_network_interface: eth1
 ```
 
 run deploy example:

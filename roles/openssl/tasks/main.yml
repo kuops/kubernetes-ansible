@@ -1,7 +1,7 @@
 ---
 - name: Create openssl config directory
   file:
-    path: "{{ openssl_conf| dirname }}"
+    path: "{{ kubernetes_certs_dir }}"
     state: directory
 
 - name: Get phusical ip address

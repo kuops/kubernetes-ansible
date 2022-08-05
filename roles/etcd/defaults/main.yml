@@ -1,5 +1,4 @@
 ---
-etcd_data_dir: "/var/lib/etcd"
 etcd_server_key: "{{ etcd_certs_dir }}/server.key"
 etcd_server_csr: "{{ etcd_certs_dir }}/server.csr"
 etcd_server_cert: "{{ etcd_certs_dir }}/server.crt"

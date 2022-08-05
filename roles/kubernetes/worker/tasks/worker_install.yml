@@ -7,5 +7,4 @@
     owner: root
     group: root
   with_items:
-  - kubelet
   - kubectl

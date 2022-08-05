@@ -18,6 +18,16 @@
     port: "{{ kubernetes_apiserver_lb_port }}"
     delay: 10
 
+- name: Check bootstrap secret exists
+  shell: |
+    kubectl  get secret -n kube-system "bootstrap-token-{{ kubernetes_bootstrap_token.split('.')[0] }}"
+  environment:
+    PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
+  delegate_to: "{{ groups['kube_master'][0] }}"
+  ignore_errors: yes
+  changed_when: False
+  register: get_bootstrap_token
+
 - name: Apply bootstrap secret and rolebinding
   shell: |
     kubectl --kubeconfig={{ kubernetes_kubeconfig_admin_conf }} \
@@ -26,4 +36,4 @@
     PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
   delegate_to: "{{ groups['kube_master'][0] }}"
   run_once: yes
-  when: kube_bootstrap.changed
+  when: kube_bootstrap.changed or 'not found' in get_bootstrap_token.stderr

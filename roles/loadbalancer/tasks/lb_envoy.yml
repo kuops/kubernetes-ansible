@@ -4,6 +4,16 @@
     path: /etc/envoy
     state: directory
 
+- name: Create envoy log directory
+  file:
+    path: /var/log/envoy
+    state: directory
+
+- name: Install envoy
+  yum:
+    name: getenvoy-envoy
+    state: present
+
 - name: Create envoy config
   template:
     src: envoy.yaml.j2

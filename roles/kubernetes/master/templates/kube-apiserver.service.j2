@@ -22,7 +22,6 @@ ExecStart=/usr/local/bin/kube-apiserver  \
   --etcd-certfile={{ kubernetes_etcd_apiserver_client_cert }}  \
   --etcd-keyfile={{ kubernetes_etcd_apiserver_client_key }}  \
   --etcd-servers={{ etcd_servers() }}  \
-  --insecure-port=0  \
   --kubelet-client-certificate={{ kubernetes_apiserver_kubelet_client_cert }}  \
   --kubelet-client-key={{ kubernetes_apiserver_kubelet_client_key }}  \
   --kubelet-preferred-address-types=InternalIP,ExternalIP,Hostname  \
@@ -35,6 +34,8 @@ ExecStart=/usr/local/bin/kube-apiserver  \
   --requestheader-username-headers=X-Remote-User  \
   --secure-port=6443 \
   --service-account-key-file={{ kubernetes_sa_pub }} \
+  --service-account-signing-key-file {{ kubernetes_sa_key }}  \
+  --service-account-issuer=https://kubernetes.default.svc.cluster.local  \
   --service-cluster-ip-range={{ kubernetes_cluster_ip_range }}  \
   --tls-cert-file={{ kubernetes_apiserver_cert }}  \
   --tls-private-key-file={{ kubernetes_apiserver_key }} \
